@@ -1,0 +1,272 @@
+:root {
+  color-scheme: dark;
+  --bg: #0d1014;
+  --text: #ecebe6;
+  --muted: #9aa1ab;
+  --flavio: #33ab64;
+  --flavio-inc: #8fe3b2;
+  --lula: #e05555;
+  --lula-fill: #be2b2b;
+  --lula-inc: #ff9d94;
+  --target: #e2b85a;
+}
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
+.race {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto 1fr 1fr;
+  gap: 8px 16px;
+  padding: 14px 20px;
+  box-sizing: border-box;
+}
+.race-top {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+.race-top h1 {
+  margin: 0;
+  font-size: 20px;
+}
+.race-top p {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+.race-hud {
+  display: flex;
+  gap: 22px;
+  margin-left: auto;
+  font-size: 22px;
+  font-variant-numeric: tabular-nums;
+}
+.race-hud .f,
+.rope-end.f,
+.rope-margin.f {
+  color: var(--flavio);
+  fill: var(--flavio);
+}
+.race-hud .l,
+.rope-end.l,
+.rope-margin.l {
+  color: var(--lula);
+  fill: var(--lula);
+}
+.race-top select,
+.race-top button {
+  background: #1b2129;
+  color: var(--text);
+  border: 1px solid #333c48;
+  border-radius: 4px;
+  padding: 5px 10px;
+  font: inherit;
+}
+.race-top label {
+  font-size: 13px;
+  color: var(--muted);
+}
+.race-a {
+  grid-column: 1 / -1;
+}
+.race section {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.race h2 {
+  margin: 0 0 4px;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.race h2 small {
+  margin-left: 8px;
+  font-size: 12px;
+  letter-spacing: 0;
+  text-transform: none;
+  font-weight: 400;
+  color: var(--muted);
+}
+.serp-wrap {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+.serp {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.serp-asphalt {
+  fill: none;
+  stroke: #1d232b;
+  stroke-width: 34;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.serp-tick {
+  stroke: #3a424d;
+  stroke-width: 1;
+}
+.serp-tick.major {
+  stroke: #5b6573;
+  stroke-width: 1.5;
+}
+.serp-scale {
+  fill: var(--muted);
+  font-size: 13px;
+}
+.serp-progress,
+.serp-increment {
+  fill: none;
+  stroke-width: 7;
+  stroke-linecap: round;
+}
+.f .serp-progress {
+  stroke: var(--flavio);
+}
+.l .serp-progress {
+  stroke: var(--lula-fill);
+}
+.f .serp-increment {
+  stroke: var(--flavio-inc);
+}
+.l .serp-increment {
+  stroke: var(--lula-inc);
+}
+.serp-head.f {
+  fill: var(--flavio);
+  stroke: var(--bg);
+  stroke-width: 2;
+}
+.serp-head.l {
+  fill: var(--lula-fill);
+  stroke: var(--bg);
+  stroke-width: 2;
+}
+.serp-fixed {
+  stroke: #ecebe6;
+  stroke-width: 3;
+}
+.serp-target {
+  stroke: var(--target);
+  stroke-width: 3;
+}
+.serp-finish {
+  fill: #ecebe6;
+  font-size: 13px;
+  font-weight: 600;
+}
+.serp-finish.target {
+  fill: var(--target);
+}
+.serp-behind circle {
+  fill: none;
+  stroke-width: 3;
+  stroke-dasharray: 4 3;
+}
+.serp-behind text {
+  font-size: 11px;
+  font-weight: 600;
+}
+.serp-behind.f circle {
+  stroke: var(--flavio);
+}
+.serp-behind.f text {
+  fill: var(--flavio);
+}
+.serp-behind.l circle {
+  stroke: var(--lula);
+}
+.serp-behind.l text {
+  fill: var(--lula);
+}
+.serp-minimap {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  width: 280px;
+  background: rgba(13, 16, 20, 0.85);
+  border: 1px solid #262d36;
+  border-radius: 4px;
+}
+.serp.mini .serp-asphalt {
+  stroke-width: 22;
+}
+.serp-frame {
+  fill: none;
+  stroke: #ecebe6;
+  stroke-width: 6;
+}
+.rope {
+  width: 100%;
+  height: 100%;
+}
+.rope-grid {
+  stroke: #262d36;
+  stroke-width: 1;
+}
+.rope-mid {
+  stroke: #ecebe6;
+  stroke-width: 2;
+}
+.rope-scale {
+  fill: var(--muted);
+  font-size: 14px;
+}
+.rope-scale.f {
+  fill: var(--flavio);
+}
+.rope-scale.l {
+  fill: var(--lula);
+}
+.rope-line {
+  stroke: #3a424d;
+  stroke-width: 6;
+  stroke-linecap: round;
+}
+.rope-pull {
+  stroke-width: 10;
+  stroke-linecap: round;
+}
+.rope-pull.f,
+.rope-knot.f,
+.rope-trail.f {
+  stroke: var(--flavio);
+  fill: var(--flavio);
+}
+.rope-pull.l,
+.rope-knot.l,
+.rope-trail.l {
+  stroke: var(--lula-fill);
+  fill: var(--lula-fill);
+}
+.rope-knot {
+  stroke: var(--bg) !important;
+  stroke-width: 3;
+}
+.rope-end {
+  font-size: 52px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.rope-margin {
+  font-size: 22px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.race-error {
+  padding: 40px;
+  color: #ffb4a8;
+}

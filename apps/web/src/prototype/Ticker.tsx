@@ -28,12 +28,15 @@ const pp = (v: number) =>
  */
 export default function Ticker({
   pull,
+  backlog = () => 0,
   speed = 110,
   label,
   note,
 }: {
   pull: () => TickerItem | null;
-  /** Pixels per second. */
+  /** Items waiting upstream: the ticker speeds up (up to 2×) as the queue grows. */
+  backlog?: () => number;
+  /** Base pixels per second. */
   speed?: number;
   label: string;
   note?: string;
@@ -43,6 +46,8 @@ export default function Ticker({
   const [items, setItems] = useState<TickerItem[]>([]);
   const pullRef = useRef(pull);
   pullRef.current = pull;
+  const backlogRef = useRef(backlog);
+  backlogRef.current = backlog;
 
   useEffect(() => {
     let frame = 0,
@@ -56,7 +61,8 @@ export default function Ticker({
         list = track.current;
       if (view && list) {
         const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        if (list.children.length) offset += (speed * dt) / 1000 / (reduce ? 4 : 1);
+        const pace = speed * (1 + Math.min(1, backlogRef.current() / 120));
+        if (list.children.length) offset += (pace * dt) / 1000 / (reduce ? 4 : 1);
         // The track starts one screen to the right (padding-left: 100%); drop the first item
         // once it has fully left on the left.
         const first = list.children[0] as HTMLElement | undefined;

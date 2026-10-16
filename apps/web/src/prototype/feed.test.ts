@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { FeedQueue, type FeedItem } from './feed';
+import { FeedQueue, OnceQueue, type FeedItem } from './feed';
 
 const item = (at: number, addedSections: number, closes = false): FeedItem => ({
   at,
@@ -26,4 +26,13 @@ it('fila do feed: encerramentos primeiro, depois mais seções, depois mais rece
   expect(q.lastMinute(62)).toBe(3); // window [2, 62]
   q.push([{ ...item(5, 1), weight: 900 }, item(6, 50)]);
   expect(q.next()!.at).toBe(5); // weight (municipality size) beats bulletin size
+});
+
+it('faixa: todos entram, em ordem de encerramento, uma vez por município', () => {
+  const q = new OnceQueue<number>();
+  expect(q.push('ac:00001', 1)).toBe(true);
+  expect(q.push('sp:71072', 2)).toBe(true);
+  expect(q.push('ac:00001', 3)).toBe(false); // reclosed after a correction: not repeated
+  expect(q.waiting).toBe(2);
+  expect([q.next(), q.next(), q.next()]).toEqual([1, 2, null]);
 });

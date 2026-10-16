@@ -3,9 +3,35 @@ export type ReplayFile = {
   label: string;
   base: string;
   municipalities: [id: string, name: string][];
-  segments: [municipality: number, zone: string, sections: number][];
-  /** [seconds since base, segment, sections totalized, valid, flavio, lula] */
-  events: [number, number, number, number | null, number | null, number | null][];
+  segments: [municipality: number, zone: string, sections: number, electorate?: number][];
+  /**
+   * [seconds since base, segment, sections totalized, valid, flavio, lula, electorate of counted
+   * sections, turnout, turnout − valid]
+   */
+  events: [
+    number,
+    number,
+    number,
+    number | null,
+    number | null,
+    number | null,
+    number?,
+    number?,
+    number?,
+  ][];
+};
+
+/** National sums of every segment's latest version (replay only; the telão uses EA20 BR). */
+export type NationalState = {
+  sections: number;
+  totalized: number;
+  electorate: number;
+  countedElectorate: number;
+  turnout: number;
+  notValid: number;
+  valid: number;
+  flavio: number;
+  lula: number;
 };
 
 export type MunicipalityState = {
@@ -39,7 +65,16 @@ export type Arrival = {
  */
 export class ReplayState {
   readonly municipalities: MunicipalityState[];
-  private readonly latest: { totalized: number; valid: number; flavio: number; lula: number }[];
+  private readonly latest: {
+    totalized: number;
+    valid: number;
+    flavio: number;
+    lula: number;
+    est: number;
+    turnout: number;
+    notValid: number;
+  }[];
+  readonly national: NationalState;
   private readonly closedSegments: number[];
   private readonly segmentCount: number[];
   private readonly sectionCount: number[];
@@ -54,6 +89,17 @@ export class ReplayState {
     }
     this.municipalities = [];
     this.latest = [];
+    this.national = {
+      sections: file.segments.reduce((n, s) => n + s[2], 0),
+      electorate: file.segments.reduce((n, s) => n + (s[3] ?? 0), 0),
+      totalized: 0,
+      countedElectorate: 0,
+      turnout: 0,
+      notValid: 0,
+      valid: 0,
+      flavio: 0,
+      lula: 0,
+    };
     this.closedSegments = [];
     this.reset();
   }
@@ -73,8 +119,26 @@ export class ReplayState {
     );
     this.latest.length = 0;
     this.file.segments.forEach(() =>
-      this.latest.push({ totalized: 0, valid: 0, flavio: 0, lula: 0 }),
+      this.latest.push({
+        totalized: 0,
+        valid: 0,
+        flavio: 0,
+        lula: 0,
+        est: 0,
+        turnout: 0,
+        notValid: 0,
+      }),
     );
+    if (this.national)
+      Object.assign(this.national, {
+        totalized: 0,
+        countedElectorate: 0,
+        turnout: 0,
+        notValid: 0,
+        valid: 0,
+        flavio: 0,
+        lula: 0,
+      });
     this.closedSegments.length = 0;
     this.file.municipalities.forEach(() => this.closedSegments.push(0));
   }
@@ -85,10 +149,26 @@ export class ReplayState {
     const arrivals: Arrival[] = [];
     const events = this.file.events;
     while (this.cursor < events.length && events[this.cursor][0] <= t) {
-      const [at, s, totalized, valid, flavio, lula] = events[this.cursor++];
+      const [at, s, totalized, valid, flavio, lula, est, turnout, notValid] = events[this.cursor++];
       const [m, zone, sections] = this.file.segments[s];
       const before = this.latest[s];
-      const after = { totalized, valid: valid ?? 0, flavio: flavio ?? 0, lula: lula ?? 0 };
+      const after = {
+        totalized,
+        valid: valid ?? 0,
+        flavio: flavio ?? 0,
+        lula: lula ?? 0,
+        est: est ?? 0,
+        turnout: turnout ?? 0,
+        notValid: notValid ?? 0,
+      };
+      const nat = this.national;
+      nat.totalized += after.totalized - before.totalized;
+      nat.countedElectorate += after.est - before.est;
+      nat.turnout += after.turnout - before.turnout;
+      nat.notValid += after.notValid - before.notValid;
+      nat.valid += after.valid - before.valid;
+      nat.flavio += after.flavio - before.flavio;
+      nat.lula += after.lula - before.lula;
       const mun = this.municipalities[m];
       mun.totalized += after.totalized - before.totalized;
       mun.valid += after.valid - before.valid;

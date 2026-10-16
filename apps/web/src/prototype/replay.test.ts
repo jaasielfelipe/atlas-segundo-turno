@@ -60,3 +60,25 @@ it('alturas: zero antes de apurar; ponderada cresce com a fração apurada', () 
   expect(margin(m)).toMatchObject({ leader: 1, votes: 30, counted: 4 / 15 });
   expect(height(m, 'weighted')).toBeCloseTo(height(m, 'points') * (4 / 15));
 });
+
+it('soma nacional acompanha versões substituídas e volta a zero ao rebobinar', () => {
+  const r = new ReplayState({
+    ...file,
+    segments: file.segments.map(([m, z, sections]) => [m, z, sections, 100]),
+    events: file.events.map((e) => [e[0], e[1], e[2], e[3], e[4], e[5], e[2] * 10, e[2] * 8, e[2]]),
+  });
+  r.advanceTo(240);
+  expect(r.national).toMatchObject({
+    sections: 19,
+    electorate: 300,
+    totalized: 19,
+    valid: 340,
+    flavio: 170,
+    lula: 145,
+    countedElectorate: 190,
+    turnout: 152,
+    notValid: 19,
+  });
+  r.advanceTo(0);
+  expect(r.national.totalized).toBe(0);
+});

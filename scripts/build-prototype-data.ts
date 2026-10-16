@@ -60,6 +60,7 @@ const rows = db
   captured_at: string;
   source_digest: string;
   generated?: string;
+  counts?: { te: number; est: number; c: number; notValid: number };
   total: number;
   totalized: number;
   valid: number | null;
@@ -79,6 +80,13 @@ for (const r of rows) {
   const generated = tseTimestamp(j.dg, j.hg);
   const previous = lastBySegment.get(key);
   r.generated = previous && previous > generated ? previous : generated;
+  // Electorate (all / of counted sections), turnout and turnout − valid, for the race target.
+  r.counts = {
+    te: Number(j.e.te),
+    est: Number(j.e.est),
+    c: Number(j.e.c),
+    notValid: Number(j.v.tv) - Number(j.v.vv),
+  };
   lastBySegment.set(key, r.generated);
 }
 rows.sort(
@@ -86,10 +94,11 @@ rows.sort(
 );
 db.close();
 const index = new Map(municipalities.map((m, i) => [m.id, i]));
-const segments: [number, string, number][] = [];
+const segments: [number, string, number, number][] = [];
 const segmentIndex = new Map<string, number>();
 const base = Date.parse(rows[0].generated!);
-// [seconds since base, segment, sections totalized, valid, flavio, lula]; null when unpublished.
+// [seconds since base, segment, sections totalized, valid, flavio, lula, electorate of counted
+// sections, turnout, turnout − valid]; null when unpublished.
 const events: (number | null)[][] = [];
 for (const r of rows) {
   const key = `${r.uf}:${r.municipality}:${r.zone}`;
@@ -97,7 +106,7 @@ for (const r of rows) {
   if (s === undefined) {
     s = segments.length;
     segmentIndex.set(key, s);
-    segments.push([index.get(`${r.uf}:${r.municipality}`)!, r.zone, r.total]);
+    segments.push([index.get(`${r.uf}:${r.municipality}`)!, r.zone, r.total, r.counts!.te]);
   }
   events.push([
     Math.round((Date.parse(r.generated!) - base) / 1000),
@@ -106,6 +115,9 @@ for (const r of rows) {
     r.valid,
     r.flavio,
     r.lula,
+    r.counts!.est,
+    r.counts!.c,
+    r.counts!.notValid,
   ]);
 }
 writeFileSync(

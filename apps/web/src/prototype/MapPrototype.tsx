@@ -9,7 +9,7 @@ import {
   type HeightMode,
   type ReplayFile,
 } from './replay';
-import { FeedQueue } from './feed';
+import { OnceQueue } from './feed';
 import Ticker, { type TickerItem } from './Ticker';
 import './prototype.css';
 
@@ -117,6 +117,7 @@ export default function MapPrototype() {
     restart: () => {},
     /** Next closed municipality for the ticker (set once the replay is loaded). */
     pull: (): TickerItem | null => null,
+    backlog: (): number => 0,
   });
   control.current.speed = speed;
   control.current.mode = mode;
@@ -202,8 +203,7 @@ export default function MapPrototype() {
         const active = new Set<number>();
         const totalSections = replay.municipalities.reduce((s, x) => s + x.sections, 0);
         // Closed municipalities: paced queue (biggest and newest first). Zone stream: all, batched.
-        const queue = new FeedQueue();
-        const snapshots = new Map<Arrival, Totals>();
+        const queue = new OnceQueue<Arrival & Totals>();
         const recent: { at: number; side: Side }[] = [];
         let pending: Chip[] = [];
         const start = replay.firstCount() - 120,
@@ -235,18 +235,18 @@ export default function MapPrototype() {
           }
           active.clear();
           queue.clear();
-          snapshots.clear();
           recent.length = 0;
           pending = [];
           setStream([]);
         };
+        control.current.backlog = () => queue.waiting;
         control.current.pull = () => {
           const card = queue.next();
           if (!card) return null;
-          const totals = snapshots.get(card)!;
-          snapshots.delete(card);
           return {
-            ...totals,
+            flavio: card.flavio,
+            lula: card.lula,
+            valid: card.valid,
             id: id++,
             uf: ufs[card.municipality],
             name: names[card.municipality],
@@ -280,13 +280,13 @@ export default function MapPrototype() {
             });
             recent.push({ at: a.at, side: sideOf(diff) });
             if (a.closes) {
-              snapshots.set(a, {
+              queue.push(file.municipalities[i][0], {
+                ...a,
                 flavio: s.flavio,
                 lula: s.lula,
                 valid: s.valid,
                 sections: s.sections,
               });
-              queue.push([Object.assign(a, { weight: s.sections })]); // same object: snapshot key
             }
           }
           while (recent.length && recent[0].at < simulated - 60) recent.shift();
@@ -457,6 +457,7 @@ export default function MapPrototype() {
         label="Municípios encerrados"
         note="Δ sintético · demonstração"
         pull={() => control.current.pull()}
+        backlog={() => control.current.backlog()}
       />
       {error && <p className="proto-error">{error}</p>}
     </div>

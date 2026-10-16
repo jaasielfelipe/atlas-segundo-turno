@@ -50,3 +50,36 @@ export class FeedQueue {
     this.recent = [];
   }
 }
+
+/**
+ * Closed-municipality queue for the ticker: everything that closes is shown, in closing order,
+ * once per municipality (a correction that reopens and closes it again is not repeated).
+ */
+export class OnceQueue<T> {
+  private items: T[] = [];
+  private head = 0;
+  private seen = new Set<string>();
+  push(key: string, item: T) {
+    if (this.seen.has(key)) return false;
+    this.seen.add(key);
+    this.items.push(item);
+    return true;
+  }
+  next(): T | null {
+    if (this.head >= this.items.length) return null;
+    const item = this.items[this.head++];
+    if (this.head > 1024) {
+      this.items = this.items.slice(this.head);
+      this.head = 0;
+    }
+    return item;
+  }
+  get waiting() {
+    return this.items.length - this.head;
+  }
+  clear() {
+    this.items = [];
+    this.head = 0;
+    this.seen.clear();
+  }
+}
