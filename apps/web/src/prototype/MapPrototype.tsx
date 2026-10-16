@@ -10,6 +10,7 @@ import {
   type ReplayFile,
 } from './replay';
 import { FeedQueue } from './feed';
+import Ticker, { type TickerItem } from './Ticker';
 import './prototype.css';
 
 // Colors follow the candidate (user decision): Flávio green, Lula red; dim while counting.
@@ -33,8 +34,6 @@ const BRAZIL: [[number, number], [number, number]] = [
 ];
 const STATUS = { none: 0, counting: 1, closed: 2 } as const;
 const SPEEDS = [30, 60, 120, 300];
-/** Real milliseconds between closed-municipality cards; the queue picks what to show. */
-const CLOSED_PACE_MS = 1800;
 /** The zone stream shows every bulletin, flushed in small batches. */
 const STREAM_FLUSH_MS = 200;
 const STREAM_SIZE = 90;
@@ -72,7 +71,20 @@ const sideOf = (diff: number): Side => (diff > 0 ? 'f' : diff < 0 ? 'l' : 't');
 type Chip = { id: number; uf: string; name: string; zone: string; diff: number; side: Side };
 /** Final numbers of a municipality at the bulletin that closed it. */
 type Totals = { flavio: number; lula: number; valid: number; sections: number };
-type Closed = Totals & { id: number; uf: string; name: string };
+/**
+ * SYNTHETIC margin change for the visual demo only (the replay is the 1st round itself, so there
+ * is no previous round to compare). Deterministic per municipality, −8…+8 p.p.; labelled on screen.
+ * On 25/10 this comes from the frozen 1st-round baseline.
+ */
+function syntheticSwing(id: string) {
+  let a = 0x811c9dc5,
+    b = 0x1b873593;
+  for (let i = 0; i < id.length; i++) {
+    a = Math.imul(a ^ id.charCodeAt(i), 0x01000193);
+    b = Math.imul(b ^ id.charCodeAt(i), 0x5bd1e995);
+  }
+  return (((a >>> 0) % 1000) / 1000 + ((b >>> 0) % 1000) / 1000 - 1) * 8;
+}
 
 /**
  * Map prototype: municipalities rise and paint as the real 1st-round night replays (TSE
@@ -98,8 +110,14 @@ export default function MapPrototype() {
     tally: { f: 0, l: 0, t: 0 },
   });
   const [stream, setStream] = useState<Chip[]>([]);
-  const [closed, setClosed] = useState<Closed[]>([]);
-  const control = useRef({ speed, mode, scale, restart: () => {} });
+  const control = useRef({
+    speed,
+    mode,
+    scale,
+    restart: () => {},
+    /** Next closed municipality for the ticker (set once the replay is loaded). */
+    pull: (): TickerItem | null => null,
+  });
   control.current.speed = speed;
   control.current.mode = mode;
   control.current.scale = scale;
@@ -167,7 +185,8 @@ export default function MapPrototype() {
         const framed = m.cameraForBounds(BRAZIL, {
           padding: { top: 150, bottom: 110, left: 30, right: 30 },
         })!;
-        m.jumpTo({ ...framed, pitch: 48, bearing: -8 });
+        // Tilting shrinks the far side: zoom in a little to fill the frame.
+        m.jumpTo({ ...framed, zoom: (framed.zoom ?? 3.5) + 0.35, pitch: 48, bearing: -8 });
 
         const replay = new ReplayState(file);
         const names = file.municipalities.map(([, name]) => name);
@@ -192,7 +211,6 @@ export default function MapPrototype() {
         let simulated = start,
           last = performance.now(),
           lastHud = 0,
-          lastCard = 0,
           lastFlush = 0,
           lastMode = control.current.mode,
           lastScale = control.current.scale,
@@ -221,7 +239,19 @@ export default function MapPrototype() {
           recent.length = 0;
           pending = [];
           setStream([]);
-          setClosed([]);
+        };
+        control.current.pull = () => {
+          const card = queue.next();
+          if (!card) return null;
+          const totals = snapshots.get(card)!;
+          snapshots.delete(card);
+          return {
+            ...totals,
+            id: id++,
+            uf: ufs[card.municipality],
+            name: names[card.municipality],
+            swing: syntheticSwing(file.municipalities[card.municipality][0]),
+          };
         };
         const tick = (now: number) => {
           if (disposed) return;
@@ -256,7 +286,7 @@ export default function MapPrototype() {
                 valid: s.valid,
                 sections: s.sections,
               });
-              queue.push([a]);
+              queue.push([Object.assign(a, { weight: s.sections })]); // same object: snapshot key
             }
           }
           while (recent.length && recent[0].at < simulated - 60) recent.shift();
@@ -265,20 +295,6 @@ export default function MapPrototype() {
             const batch = pending.slice(-STREAM_SIZE).reverse();
             pending = [];
             setStream((items) => [...batch, ...items].slice(0, STREAM_SIZE));
-          }
-          if (now - lastCard >= CLOSED_PACE_MS) {
-            const card = queue.next();
-            if (card) {
-              lastCard = now;
-              const shown: Closed = {
-                ...snapshots.get(card)!,
-                id: id++,
-                uf: ufs[card.municipality],
-                name: names[card.municipality],
-              };
-              snapshots.delete(card);
-              setClosed((items) => [shown, ...items].slice(0, 14));
-            }
           }
           if (control.current.mode !== lastMode || control.current.scale !== lastScale) {
             lastMode = control.current.mode;
@@ -431,52 +447,17 @@ export default function MapPrototype() {
               <span className="place">
                 {c.uf} · {c.name} <small>z{Number(c.zone)}</small>
               </span>
-              <span className="n">
-                {c.diff === 0 ? '±0' : `${c.side === 'f' ? 'F' : 'L'} +${int(Math.abs(c.diff))}`}
-              </span>
+              <span className="n">{c.diff === 0 ? '±0' : `+${int(Math.abs(c.diff))}`}</span>
             </li>
           ))}
         </ol>
       </section>
 
-      <section className="proto-closed" aria-label="Municípios encerrados">
-        <header>
-          <strong>Municípios encerrados</strong>
-          <span>
-            {int(hud.closed)} de {int(hud.total)} · {int(hud.waiting)} aguardando vez na tela
-          </span>
-        </header>
-        <ol>
-          {closed.map((c) => {
-            const lead = sideOf(c.flavio - c.lula);
-            return (
-              <li key={c.id}>
-                <div className="where">
-                  {c.name} <small>{c.uf}</small>
-                </div>
-                <div className="split" aria-hidden="true">
-                  <i className="f" style={{ flexGrow: c.flavio }} />
-                  <i className="o" style={{ flexGrow: Math.max(0, c.valid - c.flavio - c.lula) }} />
-                  <i className="l" style={{ flexGrow: c.lula }} />
-                </div>
-                <div className="shares">
-                  <span className="f">Flávio {c.valid ? pct(c.flavio / c.valid) : '—'}</span>
-                  <span className="lead">
-                    {lead === 't'
-                      ? 'empate'
-                      : `${lead === 'f' ? 'Flávio' : 'Lula'} à frente por ${int(Math.abs(c.flavio - c.lula))} votos`}
-                  </span>
-                  <span className="l">Lula {c.valid ? pct(c.lula / c.valid) : '—'}</span>
-                </div>
-                <div className="meta">
-                  {int(c.sections)} seções · % dos válidos · cinza: demais candidaturas (só no 1º
-                  turno)
-                </div>
-              </li>
-            );
-          })}
-        </ol>
-      </section>
+      <Ticker
+        label="Municípios encerrados"
+        note="Δ sintético · demonstração"
+        pull={() => control.current.pull()}
+      />
       {error && <p className="proto-error">{error}</p>}
     </div>
   );

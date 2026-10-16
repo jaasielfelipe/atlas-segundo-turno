@@ -1,11 +1,12 @@
 import type { Arrival } from './replay';
 
-export type FeedItem = Arrival;
+/** `weight` overrides the bulletin size in the ordering (e.g. municipality sections). */
+export type FeedItem = Arrival & { weight?: number };
 
 /**
  * Paced feed: bulletins arrive far faster than a screen can show at the peak (~22/s on the 1st
  * round night), so cards leave a bounded queue at a readable pace. Next card: a bulletin that
- * closed its municipality first, then the one with most new sections, newest on ties. Every
+ * closed its municipality first, then the heaviest (`weight`, else new sections), newest on ties. Every
  * arrival still counts in `lastMinute` (simulation seconds), shown or not.
  */
 export class FeedQueue {
@@ -29,7 +30,9 @@ export class FeedQueue {
       const a = this.queue[i],
         b = this.queue[best];
       const order =
-        Number(a.closes) - Number(b.closes) || a.addedSections - b.addedSections || a.at - b.at;
+        Number(a.closes) - Number(b.closes) ||
+        (a.weight ?? a.addedSections) - (b.weight ?? b.addedSections) ||
+        a.at - b.at;
       if (order > 0) best = i;
     }
     return this.queue.splice(best, 1)[0];

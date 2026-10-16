@@ -27,7 +27,8 @@ body,
 .proto-map {
   position: absolute;
   inset: 0;
-  right: 680px;
+  right: 230px;
+  bottom: 76px;
 }
 .proto-head {
   position: absolute;
@@ -58,12 +59,12 @@ body,
 .proto-controls {
   position: absolute;
   left: 24px;
-  bottom: 20px;
+  bottom: 92px;
   display: flex;
   flex-wrap: wrap;
   align-items: end;
   gap: 14px;
-  max-width: calc(100% - 720px);
+  max-width: calc(100% - 280px);
   font-size: 13px;
   color: var(--muted);
 }
@@ -99,11 +100,10 @@ body,
 }
 
 /* Two feeds: fast zone stream and slower closed municipalities. */
-.proto-stream,
-.proto-closed {
+.proto-stream {
   position: absolute;
   top: 0;
-  bottom: 0;
+  bottom: 76px;
   display: flex;
   flex-direction: column;
   border-left: 1px solid var(--line);
@@ -111,15 +111,10 @@ body,
   overflow: hidden;
 }
 .proto-stream {
-  right: 420px;
-  width: 260px;
-}
-.proto-closed {
   right: 0;
-  width: 420px;
+  width: 230px;
 }
-.proto-stream header,
-.proto-closed header {
+.proto-stream header {
   padding: 16px 14px 10px;
   display: flex;
   flex-direction: column;
@@ -127,10 +122,9 @@ body,
   font-size: 12px;
   color: var(--muted);
 }
-.proto-stream header strong,
-.proto-closed header strong {
+.proto-stream header strong {
   color: var(--text);
-  font-size: 15px;
+  font-size: 13px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -152,19 +146,16 @@ body,
   min-width: 2px;
   transition: flex-grow 600ms ease;
 }
-.tally .f,
-.proto-closed .split .f {
+.tally .f {
   background: var(--flavio);
 }
-.tally .l,
-.proto-closed .split .l {
+.tally .l {
   background: var(--lula-fill);
 }
 .tally .t {
   background: var(--tie);
 }
-.proto-stream ol,
-.proto-closed ol {
+.proto-stream ol {
   list-style: none;
   margin: 0;
   padding: 0 14px;
@@ -174,24 +165,16 @@ body,
   display: flex;
   justify-content: space-between;
   gap: 6px;
-  margin: 2px 0;
-  padding: 2px 0 2px 8px;
-  border-left: 3px solid var(--tie);
-  font-size: 12px;
-  line-height: 15px;
+  margin: 1px 0;
+  font-size: 11px;
+  line-height: 14px;
   white-space: nowrap;
   animation: drop 260ms ease-out;
-}
-.proto-stream li.f {
-  border-color: var(--flavio);
-}
-.proto-stream li.l {
-  border-color: var(--lula-fill);
 }
 .proto-stream .place {
   overflow: hidden;
   text-overflow: ellipsis;
-  color: #c9ccd1;
+  color: #8f969f;
 }
 .proto-stream small {
   color: var(--muted);
@@ -212,57 +195,86 @@ body,
     opacity: 0;
   }
 }
-.proto-closed li {
-  padding: 10px 0 12px;
-  border-bottom: 1px solid #1c2229;
-  animation: arrive 700ms ease-out;
-}
-@keyframes arrive {
-  from {
-    transform: translateY(-18px);
-    opacity: 0;
-  }
-}
-.proto-closed .where {
-  font-size: 19px;
-  font-weight: 650;
-}
-.proto-closed .where small {
-  color: var(--muted);
-  font-weight: 400;
-  font-size: 14px;
-}
-.proto-closed .split {
+.ticker {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 76px;
   display: flex;
-  height: 10px;
-  gap: 2px;
-  margin: 7px 0 5px;
+  align-items: stretch;
+  border-top: 1px solid var(--line);
+  background: var(--panel);
 }
-.proto-closed .split i {
-  border-radius: 2px;
-}
-.proto-closed .split .o {
-  background: #3a414b;
-}
-.proto-closed .shares {
+.ticker header {
+  flex: none;
+  width: 150px;
+  padding: 0 16px;
   display: flex;
-  justify-content: space-between;
-  font-size: 15px;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  border-right: 1px solid var(--line);
+}
+.ticker header strong {
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.ticker header small {
+  font-size: 11px;
+  color: #e2b85a;
+}
+.ticker-view {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+.ticker-view ol {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  margin: 0;
+  padding: 0 0 0 100%;
+  list-style: none;
+  white-space: nowrap;
+  will-change: transform;
+}
+.ticker-view li {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 0 34px 0 0;
+  font-size: 22px;
   font-variant-numeric: tabular-nums;
 }
-.proto-closed .shares .f {
-  color: var(--flavio);
+.ticker-view li::after {
+  content: '';
+  width: 5px;
+  height: 5px;
+  margin-left: 22px;
+  border-radius: 50%;
+  background: #3a414b;
+  align-self: center;
 }
-.proto-closed .shares .l {
-  color: var(--lula);
+.ticker-view .name {
+  font-weight: 650;
 }
-.proto-closed .lead {
-  font-size: 13px;
+.ticker-view .name small {
+  font-size: 14px;
+  font-weight: 400;
   color: var(--muted);
 }
-.proto-closed .meta {
-  margin-top: 3px;
-  font-size: 11px;
+.ticker-view .f,
+.ticker-view .swing.f {
+  color: var(--flavio);
+}
+.ticker-view .l,
+.ticker-view .swing.l {
+  color: var(--lula);
+}
+.ticker-view .swing {
+  font-size: 17px;
   color: var(--muted);
 }
 .proto-error {
@@ -271,8 +283,7 @@ body,
   color: #ffb4a8;
 }
 @media (prefers-reduced-motion: reduce) {
-  .proto-stream li,
-  .proto-closed li {
+  .proto-stream li {
     animation: none;
   }
 }

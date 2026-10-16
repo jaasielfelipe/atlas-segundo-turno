@@ -24,4 +24,6 @@ it('fila do feed: encerramentos primeiro, depois mais seções, depois mais rece
   expect(q.next()).toBeNull();
   expect(q.lastMinute(30)).toBe(4);
   expect(q.lastMinute(62)).toBe(3); // window [2, 62]
+  q.push([{ ...item(5, 1), weight: 900 }, item(6, 50)]);
+  expect(q.next()!.at).toBe(5); // weight (municipality size) beats bulletin size
 });
