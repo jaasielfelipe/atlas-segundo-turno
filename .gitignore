@@ -12,3 +12,4 @@ playwright-report/
 *.sqlite-wal
 *.sqlite-shm
 tmp/
+apps/web/public/dev/
