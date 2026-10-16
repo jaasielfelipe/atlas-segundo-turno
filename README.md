@@ -21,7 +21,7 @@ pnpm typecheck && pnpm test     # sem rede; só fixtures
 | `pnpm baseline:refresh` | Recaptura segmentos do 1º turno ainda não concluídos na base (≤ 2 req/s) | sim, poucos arquivos |
 | `pnpm collect:official:live` | Coleta contínua do 2º turno (até 80 req/s, rampa), dados em `data/official/round2/` | sim — **um coletor por máquina/IP** |
 | `pnpm backup [official\|baseline]` | Cópia SQLite consistente | não |
-| `pnpm prototype:data` + `pnpm dev:web` | Protótipo do mapa e do feed com o replay real do 1º turno em <http://127.0.0.1:5373/prototipo/mapa> | não |
+| `pnpm prototype:data` + `pnpm dev:web` | Protótipos com o replay real do 1º turno: <http://127.0.0.1:5373/prototipo/mapa>, `/prototipo/corrida`, `/prototipo/mosaico` | não |
 
 Regras do projeto: [AGENTS.md](AGENTS.md). Especificação: [docs/ESPECIFICACAO.md](docs/ESPECIFICACAO.md). Evidências: [docs/VALIDACAO.md](docs/VALIDACAO.md).
 

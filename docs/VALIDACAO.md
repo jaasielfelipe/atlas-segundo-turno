@@ -43,3 +43,10 @@ Append-only. Separar sempre: sintético (fixture), simulado TSE, oficial TSE.
 - **Delta sintético no protótipo:** o replay é o próprio 1º turno; a variação exibida é um valor determinístico por município (−8…+8 p.p.), com selo “Δ sintético · demonstração”. No 2º turno o campo vem da base do 1º turno.
 - Boletins por zona: fonte menor, só o número na cor do candidato (sem rótulos F/L).
 - Verificações: typecheck, 62 testes, build, formatação; captura 1920×1080 e teste de fumaça da faixa sem erro de página.
+
+## 16/10/2026 — experimentos de corrida e mosaico (replay real do 1º turno)
+
+- **Faixa:** todos os municípios encerrados entram, uma vez cada, em ordem de encerramento; a faixa acelera até 2× com fila (sem descarte).
+- **Corrida (`/prototipo/corrida`):** (A) serpentina longa, 8 retas de ~1.740 px (~14,6 mil px de pista, ~2,7× a do 1º turno; ~1 px a cada 6 mil votos); (B) câmera que segue o líder a 3×, com o outro corredor como marcador na borda e minimapa — enquadrar os dois anulava o zoom quando a diferença passava de alguns milhões; (C) cabo de guerra da divisão entre os dois (50% ± 15 p.p.) com rastro. Meta ajustada = (aptos − abstenções apuradas − não válidos apurados) / 2, a partir dos campos acrescentados ao replay.
+- **Mosaico (`/prototipo/mosaico`):** cada UF é um “copo” — largura = aptos, altura preenchida = seções apuradas, cores = válidos apurados, traço = metade dos válidos; um único número por UF (vantagem do líder em p.p., na cor do líder, tamanho pela largura); regiões com vantagem e % apurado.
+- Verificações: typecheck, testes (geometria da pista, somas nacionais e por UF, larguras, fila única), build, formatação; capturas 1920×1080 sem erro de página.
