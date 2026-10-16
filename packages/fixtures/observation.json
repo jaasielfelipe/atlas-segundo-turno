@@ -1,0 +1,72 @@
+[
+  {
+    "file": "official/ea11.json",
+    "url": "https://resultados.tse.jus.br/oficial/comum/config/ele-c.json",
+    "capturedAt": "2026-10-02T17:20:36.097Z",
+    "status": 200,
+    "bytes": 22749,
+    "sha256": "d88fe773a43eebed94aa082c6432bb405b2b924b6fd788e15d37561944a133de",
+    "etag": "\"3c1a5ff2977684213f6b5ae9c0f04395\"",
+    "lastModified": "Wed, 30 Sep 2026 15:31:59 GMT"
+  },
+  {
+    "file": "simulado/ea11.json",
+    "url": "https://resultados-sim.tse.jus.br/simulado/simulado2026/comum/config/ele-c.json",
+    "capturedAt": "2026-10-02T17:20:36.950Z",
+    "status": 200,
+    "bytes": 1857,
+    "sha256": "6484af59423d8ff01ebf41f3ba5f5e487b338b8014a76af2be75970a9fa6de16",
+    "etag": "\"7128d49962b627f7a58816dceb112c33\"",
+    "lastModified": "Fri, 18 Sep 2026 15:55:29 GMT"
+  },
+  {
+    "file": "simulado/ea12.json",
+    "url": "https://resultados-sim.tse.jus.br/simulado/simulado2026/ele2026/21270/config/mun-e021270-cm.json",
+    "capturedAt": "2026-10-02T17:20:38.046Z",
+    "status": 200,
+    "bytes": 534069,
+    "sha256": "616bb78c722c1b0507322225ec8e77f1180039dc9034ab1b8d73fa90672e3ffa",
+    "etag": "\"7dc093afd3d40dd551b38a4275f97e64\"",
+    "lastModified": "Fri, 18 Sep 2026 15:59:01 GMT"
+  },
+  {
+    "file": "simulado/ea14.json",
+    "url": "https://resultados-sim.tse.jus.br/simulado/simulado2026/ele2026/21270/dados/br/br-e021270-ab.json",
+    "capturedAt": "2026-10-02T17:20:39.337Z",
+    "status": 200,
+    "bytes": 29413,
+    "sha256": "d0bc1bb5b8edae752020ff2346c5cc59edfd27855f974d36ff30cd2420e3cf76",
+    "etag": "\"9a70a9046d09ca8c92549ada50ae1a3a\"",
+    "lastModified": "Tue, 29 Sep 2026 19:29:39 GMT"
+  },
+  {
+    "file": "simulado/ea15-ac.json",
+    "url": "https://resultados-sim.tse.jus.br/simulado/simulado2026/ele2026/21270/dados/ac/ac-e021270-ab.json",
+    "capturedAt": "2026-10-02T17:20:39.998Z",
+    "status": 200,
+    "bytes": 19441,
+    "sha256": "659b93c53efe8c00d4c8e7b546f7a3a7dda4f67aa620ad443fb31f410f5291b1",
+    "etag": "\"d0bf676f6a8ebb897f17f543ca1509b3\"",
+    "lastModified": "Tue, 29 Sep 2026 19:30:23 GMT"
+  },
+  {
+    "file": "simulado/ea20-president-br.json",
+    "url": "https://resultados-sim.tse.jus.br/simulado/simulado2026/ele2026/21270/dados/br/br-c0001-e021270-u.json",
+    "capturedAt": "2026-10-02T17:20:41.124Z",
+    "status": 200,
+    "bytes": 10059,
+    "sha256": "01c29f5326850aab33d3298f755f229fad9de90c7e16ae2dbaaa04ff76e81c71",
+    "etag": "\"adc8b05f9ea0b99ce46cc936253eacf5\"",
+    "lastModified": "Tue, 29 Sep 2026 19:29:39 GMT"
+  },
+  {
+    "file": "simulado/ea20-governor-ac.json",
+    "url": "https://resultados-sim.tse.jus.br/simulado/simulado2026/ele2026/21272/dados/ac/ac-c0003-e021272-u.json",
+    "capturedAt": "2026-10-02T17:20:41.833Z",
+    "status": 200,
+    "bytes": 7683,
+    "sha256": "4a942ec85b4c9b7eae7f801ab8d472dac757d2e77d0a21fd20eb972d5516a117",
+    "etag": "\"020009dd7411b06c45763895086f64f3\"",
+    "lastModified": "Tue, 29 Sep 2026 19:36:09 GMT"
+  }
+]

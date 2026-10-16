@@ -1,0 +1,6 @@
+{
+  "election": { "round1": "6257", "round2": "6258" },
+  "flavio": { "id": "280002551544", "number": "22", "name": "FLAVIO NANTES BOLSONARO" },
+  "lula": { "id": "280002542548", "number": "13", "name": "LUIZ INÁCIO LULA DA SILVA" },
+  "evidence": "round2/ea20-president-br.json (EA20 oficial 6258, 15/10/2026) e zonal/official-ac01120-z0008.json (EA20 oficial 6257): mesmo sqcand e número nos dois turnos. Resolução por identificador oficial, nunca por nome."
+}

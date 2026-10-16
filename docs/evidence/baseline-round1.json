@@ -1,0 +1,432 @@
+{
+  "builtAt": "2026-10-16T22:09:39.785Z",
+  "seconds": 14.099,
+  "registryDigest": "95a5a0a7530a494e510baf6da17b048d234ec424af47a9c5c80ec4468e351d75",
+  "election": "6257",
+  "segments": {
+    "registry": 6292,
+    "captured": 6292,
+    "complete": 6239,
+    "partial": 12,
+    "needsReview": 41
+  },
+  "sums": {
+    "allCaptured": {
+      "sections": 499179,
+      "electorate": 158745502,
+      "turnout": 125258354,
+      "valid": 119284352,
+      "blank": 2300430,
+      "null": 3673572,
+      "flavio": 56098043,
+      "lula": 53870668
+    },
+    "complete": {
+      "sections": 497983,
+      "electorate": 158336874,
+      "turnout": 124954185,
+      "valid": 118998349,
+      "blank": 2293194,
+      "null": 3662642,
+      "flavio": 55970927,
+      "lula": 53734220
+    }
+  },
+  "national": {
+    "capturedAt": "2026-10-05T06:00:38.509Z",
+    "sourceGeneratedAt": "2026-10-05T05:59:31.000Z",
+    "sections": 499248,
+    "electorate": 158745502,
+    "turnout": 125275835,
+    "valid": 119300788,
+    "blank": 2300798,
+    "null": 3674249,
+    "flavio": 56104503,
+    "lula": 53879538
+  },
+  "difference": {
+    "sections": -69,
+    "electorate": 0,
+    "turnout": -17481,
+    "valid": -16436,
+    "blank": -368,
+    "null": -677,
+    "flavio": -6460,
+    "lula": -8870
+  },
+  "refresh": {
+    "at": "2026-10-16T22:11:59.878Z",
+    "requests": 53,
+    "outcome": [
+      {
+        "segment": "zz:29831:0001",
+        "before": "needs_review",
+        "after": "needs_review",
+        "changed": true
+      },
+      {
+        "segment": "zz:29424:0001",
+        "before": "needs_review",
+        "after": "needs_review",
+        "changed": true
+      },
+      {
+        "segment": "zz:29963:0001",
+        "before": "needs_review",
+        "after": "needs_review",
+        "changed": true
+      },
+      {
+        "segment": "zz:29815:0001",
+        "before": "needs_review",
+        "after": "needs_review",
+        "changed": true
+      },
+      {
+        "segment": "zz:29521:0001",
+        "before": "needs_review",
+        "after": "needs_review",
+        "changed": true
+      },
+      {
+        "segment": "zz:29823:0001",
+        "before": "needs_review",
+        "after": "needs_review",
+        "changed": true
+      },
+      {
+        "segment": "zz:29939:0001",
+        "before": "needs_review",
+        "after": "needs_review",
+        "changed": true
+      },
+      {
+        "segment": "zz:30929:0001",
+        "before": "needs_review",
+        "after": "needs_review",
+        "changed": true
+      },
+      {
+        "segment": "zz:29769:0001",
+        "before": "needs_review",
+        "after": "needs_review",
+        "changed": true
+      },
+      {
+        "segment": "zz:38903:0001",
+        "before": "needs_review",
+        "after": "needs_review",
+        "changed": true
+      },
+      {
+        "segment": "zz:29629:0001",
+        "before": "needs_review",
+        "after": "needs_review",
+        "changed": true
+      },
+      {
+        "segment": "zz:99171:0001",
+        "before": "needs_review",
+        "after": "needs_review",
+        "changed": true
+      },
+      {
+        "segment": "zz:29874:0001",
+        "before": "needs_review",
+        "after": "needs_review",
+        "changed": true
+      },
+      {
+        "segment": "zz:39225:0001",
+        "before": "needs_review",
+        "after": "needs_review",
+        "changed": true
+      },
+      {
+        "segment": "zz:99236:0001",
+        "before": "needs_review",
+        "after": "needs_review",
+        "changed": true
+      },
+      {
+        "segment": "zz:99341:0001",
+        "before": "needs_review",
+        "after": "needs_review",
+        "changed": true
+      },
+      {
+        "segment": "zz:99333:0001",
+        "before": "needs_review",
+        "after": "needs_review",
+        "changed": true
+      },
+      {
+        "segment": "zz:39128:0001",
+        "before": "needs_review",
+        "after": "needs_review",
+        "changed": true
+      },
+      {
+        "segment": "zz:30988:0001",
+        "before": "needs_review",
+        "after": "needs_review",
+        "changed": true
+      },
+      {
+        "segment": "zz:38920:0001",
+        "before": "needs_review",
+        "after": "needs_review",
+        "changed": true
+      },
+      {
+        "segment": "zz:30669:0001",
+        "before": "needs_review",
+        "after": "needs_review",
+        "changed": true
+      },
+      {
+        "segment": "zz:99279:0001",
+        "before": "needs_review",
+        "after": "needs_review",
+        "changed": true
+      },
+      {
+        "segment": "zz:39187:0001",
+        "before": "needs_review",
+        "after": "needs_review",
+        "changed": true
+      },
+      {
+        "segment": "zz:99376:0001",
+        "before": "needs_review",
+        "after": "needs_review",
+        "changed": true
+      },
+      {
+        "segment": "zz:99210:0001",
+        "before": "needs_review",
+        "after": "needs_review",
+        "changed": true
+      },
+      {
+        "segment": "zz:99198:0001",
+        "before": "needs_review",
+        "after": "needs_review",
+        "changed": true
+      },
+      {
+        "segment": "zz:39284:0001",
+        "before": "needs_review",
+        "after": "needs_review",
+        "changed": true
+      },
+      {
+        "segment": "zz:99104:0001",
+        "before": "needs_review",
+        "after": "needs_review",
+        "changed": true
+      },
+      {
+        "segment": "zz:99147:0001",
+        "before": "needs_review",
+        "after": "needs_review",
+        "changed": true
+      },
+      {
+        "segment": "zz:99384:0001",
+        "before": "needs_review",
+        "after": "needs_review",
+        "changed": true
+      },
+      {
+        "segment": "zz:99244:0001",
+        "before": "needs_review",
+        "after": "needs_review",
+        "changed": true
+      },
+      {
+        "segment": "zz:38989:0001",
+        "before": "needs_review",
+        "after": "needs_review",
+        "changed": true
+      },
+      {
+        "segment": "zz:99295:0001",
+        "before": "needs_review",
+        "after": "needs_review",
+        "changed": true
+      },
+      {
+        "segment": "zz:99325:0001",
+        "before": "needs_review",
+        "after": "needs_review",
+        "changed": true
+      },
+      {
+        "segment": "zz:99287:0001",
+        "before": "needs_review",
+        "after": "needs_review",
+        "changed": true
+      },
+      {
+        "segment": "zz:99139:0001",
+        "before": "needs_review",
+        "after": "needs_review",
+        "changed": true
+      },
+      {
+        "segment": "zz:99350:0001",
+        "before": "needs_review",
+        "after": "needs_review",
+        "changed": true
+      },
+      {
+        "segment": "zz:39263:0001",
+        "before": "needs_review",
+        "after": "needs_review",
+        "changed": true
+      },
+      {
+        "segment": "zz:39241:0001",
+        "before": "needs_review",
+        "after": "needs_review",
+        "changed": true
+      },
+      {
+        "segment": "zz:38881:0001",
+        "before": "needs_review",
+        "after": "needs_review",
+        "changed": true
+      },
+      {
+        "segment": "mg:41556:0072",
+        "before": "partial",
+        "after": "complete",
+        "changed": true
+      },
+      {
+        "segment": "mg:42005:0266",
+        "before": "partial",
+        "after": "complete",
+        "changed": true
+      },
+      {
+        "segment": "mg:40622:0187",
+        "before": "partial",
+        "after": "complete",
+        "changed": true
+      },
+      {
+        "segment": "mg:53171:0135",
+        "before": "partial",
+        "after": "complete",
+        "changed": true
+      },
+      {
+        "segment": "mg:46078:0160",
+        "before": "partial",
+        "after": "complete",
+        "changed": true
+      },
+      {
+        "segment": "sp:67130:0287",
+        "before": "partial",
+        "after": "complete",
+        "changed": true
+      },
+      {
+        "segment": "ba:33693:0177",
+        "before": "partial",
+        "after": "complete",
+        "changed": true
+      },
+      {
+        "segment": "ba:34673:0132",
+        "before": "partial",
+        "after": "complete",
+        "changed": true
+      },
+      {
+        "segment": "ba:36013:0119",
+        "before": "partial",
+        "after": "complete",
+        "changed": true
+      },
+      {
+        "segment": "ba:39659:0041",
+        "before": "partial",
+        "after": "complete",
+        "changed": true
+      },
+      {
+        "segment": "mg:41696:0120",
+        "before": "partial",
+        "after": "complete",
+        "changed": true
+      },
+      {
+        "segment": "mg:51977:0046",
+        "before": "partial",
+        "after": "complete",
+        "changed": true
+      },
+      {
+        "segment": "zz:29564:0001",
+        "before": "needs_review",
+        "after": "needs_review",
+        "changed": true
+      }
+    ],
+    "segments": {
+      "registry": 6292,
+      "captured": 6292,
+      "complete": 6251,
+      "partial": 0,
+      "needsReview": 41
+    },
+    "sums": {
+      "allCaptured": {
+        "sections": 499248,
+        "electorate": 158745502,
+        "turnout": 125275835,
+        "valid": 119300788,
+        "blank": 2300798,
+        "null": 3674249,
+        "flavio": 56104503,
+        "lula": 53879538
+      },
+      "complete": {
+        "sections": 499206,
+        "electorate": 158745007,
+        "turnout": 125275835,
+        "valid": 119300788,
+        "blank": 2300798,
+        "null": 3674249,
+        "flavio": 56104503,
+        "lula": 53879538
+      }
+    },
+    "national": {
+      "capturedAt": "2026-10-05T06:00:38.509Z",
+      "sourceGeneratedAt": "2026-10-05T05:59:31.000Z",
+      "sections": 499248,
+      "electorate": 158745502,
+      "turnout": 125275835,
+      "valid": 119300788,
+      "blank": 2300798,
+      "null": 3674249,
+      "flavio": 56104503,
+      "lula": 53879538
+    },
+    "difference": {
+      "sections": 0,
+      "electorate": 0,
+      "turnout": 0,
+      "valid": 0,
+      "blank": 0,
+      "null": 0,
+      "flavio": 0,
+      "lula": 0
+    }
+  }
+}

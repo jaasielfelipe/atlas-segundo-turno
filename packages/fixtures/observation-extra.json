@@ -1,0 +1,50 @@
+[
+  {
+    "file": "simulado/ea16-ac.json",
+    "url": "https://resultados-sim.tse.jus.br/simulado/simulado2026/ele2026/arquivo-urna/17801/config/ac/ac-p017801-cs.json",
+    "status": 200,
+    "capturedAt": "2026-10-02T17:23:25.762Z",
+    "bytes": 182576,
+    "sha256": "c20e6ba2f2aa7c802ec543da65afda629dfa6b3f10ae5ac691452d2a3e4fbf68"
+  },
+  {
+    "file": "simulado/ea18-ac.json",
+    "url": "https://resultados-sim.tse.jus.br/simulado/simulado2026/ele2026/arquivo-urna/17801/dados/ac/01074/0004/0001/p017801-ac-m01074-z0004-s0001-aux.json",
+    "status": 200,
+    "capturedAt": "2026-10-02T17:23:27.416Z",
+    "bytes": 130,
+    "sha256": "c682a76e53a9f41ce19faf95eb15b58a9014b8e2bcff8c9d5047901371ea4fb0"
+  },
+  {
+    "file": "simulado/ea20-president-ac.json",
+    "url": "https://resultados-sim.tse.jus.br/simulado/simulado2026/ele2026/21270/dados/ac/ac-c0001-e021270-u.json",
+    "status": 200,
+    "capturedAt": "2026-10-02T17:23:28.630Z",
+    "bytes": 10021,
+    "sha256": "8c8800f07e5f24a0b1b9e698ac1a30b00008bbcc5d8b496e15ca24cc76f8dbee"
+  },
+  {
+    "file": "simulado/ea20-president-ac01120.json",
+    "url": "https://resultados-sim.tse.jus.br/simulado/simulado2026/ele2026/21270/dados/ac/ac01120-c0001-e021270-u.json",
+    "status": 200,
+    "capturedAt": "2026-10-02T17:23:29.313Z",
+    "bytes": 9902,
+    "sha256": "42378986a025383868edd6e3eeb2013c39d63b8733b49227f0574879df020214"
+  },
+  {
+    "file": "maps/br-ufs.geojson",
+    "url": "https://servicodados.ibge.gov.br/api/v3/malhas/paises/BR?formato=application/vnd.geo+json&qualidade=minima&intrarregiao=UF",
+    "status": 200,
+    "capturedAt": "2026-10-02T17:23:30.654Z",
+    "bytes": 98502,
+    "sha256": "07c671aa87aa1ab296c446de6294df9827112782537b996c0a160284907e7c0f"
+  },
+  {
+    "file": "maps/ac-municipalities.geojson",
+    "url": "https://servicodados.ibge.gov.br/api/v3/malhas/estados/12?formato=application/vnd.geo+json&qualidade=minima&intrarregiao=municipio",
+    "status": 200,
+    "capturedAt": "2026-10-02T17:23:31.386Z",
+    "bytes": 31052,
+    "sha256": "b4c9b49e2d9bad785402127043f1d4a0f5c5efa4ed63b6a2aceba89e2a374383"
+  }
+]

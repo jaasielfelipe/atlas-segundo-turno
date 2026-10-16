@@ -1,0 +1,33 @@
+[
+  {
+    "file": "round2/ea11.json",
+    "url": "https://resultados.tse.jus.br/oficial/comum/config/ele-c.json",
+    "capturedAt": "2026-10-16T22:00:59.000Z",
+    "status": 200,
+    "bytes": 26574,
+    "sha256": "64e36d9bdab655f32d803843663b3e57594a4d673f92e7aa74a14cb01687bd5a",
+    "note": "Observação única pré-votação do 2º turno (contadores zerados); capturedAt registrado logo após o download (EA11 ~2 min antes)."
+  },
+  {
+    "file": "round2/ea12.json",
+    "url": "https://resultados.tse.jus.br/oficial/ele2026/6258/config/mun-e006258-cm.json",
+    "capturedAt": "2026-10-16T22:00:59.000Z",
+    "status": 200,
+    "bytes": 534026,
+    "sha256": "e4a2f2d45bac325f486e1866973fd65ae86744896d0f19e791b0bbb58d86e839",
+    "lastModified": "Thu, 15 Oct 2026 12:38:54 GMT",
+    "etag": "\"e288c569873a017689ee5b020a71abc2\"",
+    "note": "Observação única pré-votação do 2º turno (contadores zerados); capturedAt registrado logo após o download (EA11 ~2 min antes)."
+  },
+  {
+    "file": "round2/ea20-president-br.json",
+    "url": "https://resultados.tse.jus.br/oficial/ele2026/6258/dados/br/br-c0001-e006258-u.json",
+    "capturedAt": "2026-10-16T22:00:59.000Z",
+    "status": 200,
+    "bytes": 2864,
+    "sha256": "d57a0b93daff57aca9767c05cf2c9b10a293dc5eea42be96cb1cfd3993c131c9",
+    "lastModified": "Thu, 15 Oct 2026 12:38:25 GMT",
+    "etag": "\"8cfac16c5d817fe190b047c9235d7e90\"",
+    "note": "Observação única pré-votação do 2º turno (contadores zerados); capturedAt registrado logo após o download (EA11 ~2 min antes)."
+  }
+]

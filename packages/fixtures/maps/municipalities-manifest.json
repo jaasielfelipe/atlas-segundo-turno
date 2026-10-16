@@ -1,0 +1,164 @@
+{
+  "ac": {
+    "url": "https://servicodados.ibge.gov.br/api/v3/malhas/estados/AC?formato=application/vnd.geo%2Bjson&intrarregiao=municipio&qualidade=minima",
+    "capturedAt": "2026-10-03T22:02:39.726Z",
+    "sha256": "b4c9b49e2d9bad785402127043f1d4a0f5c5efa4ed63b6a2aceba89e2a374383",
+    "features": 22
+  },
+  "al": {
+    "url": "https://servicodados.ibge.gov.br/api/v3/malhas/estados/AL?formato=application/vnd.geo%2Bjson&intrarregiao=municipio&qualidade=minima",
+    "capturedAt": "2026-10-03T22:02:39.758Z",
+    "sha256": "1476940149238567109933a5e1d91fbc5a3234dbff4256a572f65caf28b15342",
+    "features": 102
+  },
+  "am": {
+    "url": "https://servicodados.ibge.gov.br/api/v3/malhas/estados/AM?formato=application/vnd.geo%2Bjson&intrarregiao=municipio&qualidade=minima",
+    "capturedAt": "2026-10-03T22:02:39.783Z",
+    "sha256": "e6a91d70cdea0b8e464f126309acb4d18ce5ef143ddb2bda25a5d945d4654a77",
+    "features": 62
+  },
+  "ap": {
+    "url": "https://servicodados.ibge.gov.br/api/v3/malhas/estados/AP?formato=application/vnd.geo%2Bjson&intrarregiao=municipio&qualidade=minima",
+    "capturedAt": "2026-10-03T22:02:39.803Z",
+    "sha256": "5f3ecd0b50a8869f5165d85272956759f94b6be99a9cda0ad4ce03928e6cf3b2",
+    "features": 16
+  },
+  "ba": {
+    "url": "https://servicodados.ibge.gov.br/api/v3/malhas/estados/BA?formato=application/vnd.geo%2Bjson&intrarregiao=municipio&qualidade=minima",
+    "capturedAt": "2026-10-03T22:02:39.828Z",
+    "sha256": "ebbaf1ae8a374f47953dac1fe9c3b87d4415839a5fcfcbcbcf905b790d5b0c25",
+    "features": 417
+  },
+  "ce": {
+    "url": "https://servicodados.ibge.gov.br/api/v3/malhas/estados/CE?formato=application/vnd.geo%2Bjson&intrarregiao=municipio&qualidade=minima",
+    "capturedAt": "2026-10-03T22:02:39.857Z",
+    "sha256": "c7d893b8e7c4daca7f064485c56c3a1ad7a9fa532a0145cd402ea7765bd43ceb",
+    "features": 184
+  },
+  "df": {
+    "url": "https://servicodados.ibge.gov.br/api/v3/malhas/estados/DF?formato=application/vnd.geo%2Bjson&intrarregiao=municipio&qualidade=minima",
+    "capturedAt": "2026-10-03T22:02:39.877Z",
+    "sha256": "4e80727fdb17458113d381eb232dbc1d786d3846feac81743cb3b78d3717cd36",
+    "features": 1
+  },
+  "es": {
+    "url": "https://servicodados.ibge.gov.br/api/v3/malhas/estados/ES?formato=application/vnd.geo%2Bjson&intrarregiao=municipio&qualidade=minima",
+    "capturedAt": "2026-10-03T22:02:39.894Z",
+    "sha256": "ae5cbf7ce4093191e65b31a728ace0a84d0b22b7bd6c5863d3921d986d0e6fd7",
+    "features": 78
+  },
+  "go": {
+    "url": "https://servicodados.ibge.gov.br/api/v3/malhas/estados/GO?formato=application/vnd.geo%2Bjson&intrarregiao=municipio&qualidade=minima",
+    "capturedAt": "2026-10-03T22:02:39.935Z",
+    "sha256": "d73b419ae68447077d63744f86850e8442312206ecef8ecbf173386eaeada08e",
+    "features": 246
+  },
+  "ma": {
+    "url": "https://servicodados.ibge.gov.br/api/v3/malhas/estados/MA?formato=application/vnd.geo%2Bjson&intrarregiao=municipio&qualidade=minima",
+    "capturedAt": "2026-10-03T22:02:39.963Z",
+    "sha256": "06c90356dde32b07e68783a31c8aa4068de8a9ca866e71a2a3623f5b93609cb6",
+    "features": 217
+  },
+  "mg": {
+    "url": "https://servicodados.ibge.gov.br/api/v3/malhas/estados/MG?formato=application/vnd.geo%2Bjson&intrarregiao=municipio&qualidade=minima",
+    "capturedAt": "2026-10-03T22:02:39.999Z",
+    "sha256": "b7befa63a1dfac3386535468c6213ea69e05cdd858a805babcc632d59c121b79",
+    "features": 853
+  },
+  "ms": {
+    "url": "https://servicodados.ibge.gov.br/api/v3/malhas/estados/MS?formato=application/vnd.geo%2Bjson&intrarregiao=municipio&qualidade=minima",
+    "capturedAt": "2026-10-03T22:02:40.019Z",
+    "sha256": "701db8a5d1ecd43d9d58539a8b15c897e595b8176f59621624b66c1c5b1a0f03",
+    "features": 79
+  },
+  "mt": {
+    "url": "https://servicodados.ibge.gov.br/api/v3/malhas/estados/MT?formato=application/vnd.geo%2Bjson&intrarregiao=municipio&qualidade=minima",
+    "capturedAt": "2026-10-03T22:02:40.046Z",
+    "sha256": "35a6dccfe49e078ff2b9f5cedd3e96ebb936031528121388a93070cabbe47305",
+    "features": 141
+  },
+  "pa": {
+    "url": "https://servicodados.ibge.gov.br/api/v3/malhas/estados/PA?formato=application/vnd.geo%2Bjson&intrarregiao=municipio&qualidade=minima",
+    "capturedAt": "2026-10-03T22:02:40.072Z",
+    "sha256": "075c1b29656380bd04be983bc0c50143610c093786fb9cbe6264c8d6bc702f01",
+    "features": 144
+  },
+  "pb": {
+    "url": "https://servicodados.ibge.gov.br/api/v3/malhas/estados/PB?formato=application/vnd.geo%2Bjson&intrarregiao=municipio&qualidade=minima",
+    "capturedAt": "2026-10-03T22:02:40.090Z",
+    "sha256": "7d40078216561fccfeecffa648a2ea89e215c31c39f0e961b49854cc6e858a86",
+    "features": 223
+  },
+  "pe": {
+    "url": "https://servicodados.ibge.gov.br/api/v3/malhas/estados/PE?formato=application/vnd.geo%2Bjson&intrarregiao=municipio&qualidade=minima",
+    "capturedAt": "2026-10-03T22:02:40.117Z",
+    "sha256": "eb69d97fdc22ab263e38a8410dc606c2e58cd2c42c7ef0c6f731f93dfa38ff2e",
+    "features": 185
+  },
+  "pi": {
+    "url": "https://servicodados.ibge.gov.br/api/v3/malhas/estados/PI?formato=application/vnd.geo%2Bjson&intrarregiao=municipio&qualidade=minima",
+    "capturedAt": "2026-10-03T22:02:40.160Z",
+    "sha256": "c2c97227ee35bea48e7449f4f549273da6055e1400c587a0eab320e6517dc9b4",
+    "features": 224
+  },
+  "pr": {
+    "url": "https://servicodados.ibge.gov.br/api/v3/malhas/estados/PR?formato=application/vnd.geo%2Bjson&intrarregiao=municipio&qualidade=minima",
+    "capturedAt": "2026-10-03T22:02:40.194Z",
+    "sha256": "6654eb9420304ef4102757023e055ec441cd0ca0853a397ff57256ba66111b3b",
+    "features": 399
+  },
+  "rj": {
+    "url": "https://servicodados.ibge.gov.br/api/v3/malhas/estados/RJ?formato=application/vnd.geo%2Bjson&intrarregiao=municipio&qualidade=minima",
+    "capturedAt": "2026-10-03T22:02:40.215Z",
+    "sha256": "e40ff0e8b87be8e95cc88b1197c28e0c831a9c825baa6b4e99a9ced063631be8",
+    "features": 92
+  },
+  "rn": {
+    "url": "https://servicodados.ibge.gov.br/api/v3/malhas/estados/RN?formato=application/vnd.geo%2Bjson&intrarregiao=municipio&qualidade=minima",
+    "capturedAt": "2026-10-03T22:02:40.236Z",
+    "sha256": "0e8632a2c7921e34c986a9e9252cb17a092c7b7dd5804ff3e8e747c6d5969fcd",
+    "features": 167
+  },
+  "ro": {
+    "url": "https://servicodados.ibge.gov.br/api/v3/malhas/estados/RO?formato=application/vnd.geo%2Bjson&intrarregiao=municipio&qualidade=minima",
+    "capturedAt": "2026-10-03T22:02:40.266Z",
+    "sha256": "81353e8d543840013fc2b52f680bed1832a3854d68065de149fcbbee02e2c1cb",
+    "features": 52
+  },
+  "rr": {
+    "url": "https://servicodados.ibge.gov.br/api/v3/malhas/estados/RR?formato=application/vnd.geo%2Bjson&intrarregiao=municipio&qualidade=minima",
+    "capturedAt": "2026-10-03T22:02:40.344Z",
+    "sha256": "5870db93b5de206482594d3c1ae5682a8eb79a53511765b66b5c55675e054471",
+    "features": 15
+  },
+  "rs": {
+    "url": "https://servicodados.ibge.gov.br/api/v3/malhas/estados/RS?formato=application/vnd.geo%2Bjson&intrarregiao=municipio&qualidade=minima",
+    "capturedAt": "2026-10-03T22:02:40.375Z",
+    "sha256": "1e9de26467d1cb24b7299967383d2dc5155ba493a94771a4b286a62d55c15515",
+    "features": 497
+  },
+  "sc": {
+    "url": "https://servicodados.ibge.gov.br/api/v3/malhas/estados/SC?formato=application/vnd.geo%2Bjson&intrarregiao=municipio&qualidade=minima",
+    "capturedAt": "2026-10-03T22:02:40.413Z",
+    "sha256": "73546f7172c53221e023dd9dd7430484d890da059c49f33063569ed637261c4c",
+    "features": 295
+  },
+  "se": {
+    "url": "https://servicodados.ibge.gov.br/api/v3/malhas/estados/SE?formato=application/vnd.geo%2Bjson&intrarregiao=municipio&qualidade=minima",
+    "capturedAt": "2026-10-03T22:02:40.429Z",
+    "sha256": "52decf97a53ac7ae45952d07c92500c59caa7a466b6bd587a0a5faf7cbff0b87",
+    "features": 75
+  },
+  "sp": {
+    "url": "https://servicodados.ibge.gov.br/api/v3/malhas/estados/SP?formato=application/vnd.geo%2Bjson&intrarregiao=municipio&qualidade=minima",
+    "capturedAt": "2026-10-03T22:02:40.461Z",
+    "sha256": "7db0d263e8930e581223181f4c009d139b0a14a5398a332c130cab6bd7e90dff",
+    "features": 645
+  },
+  "to": {
+    "url": "https://servicodados.ibge.gov.br/api/v3/malhas/estados/TO?formato=application/vnd.geo%2Bjson&intrarregiao=municipio&qualidade=minima",
+    "capturedAt": "2026-10-03T22:02:40.489Z",
+    "sha256": "093f68ab8a3bbf8840dba0e32a3f26d31261120167621fa769b6cfa044430a2e",
+    "features": 139
+  }
+}

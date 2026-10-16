@@ -1,0 +1,7 @@
+node_modules
+dist
+data
+packages/fixtures
+docs/evidence
+pnpm-lock.yaml
+*.sql

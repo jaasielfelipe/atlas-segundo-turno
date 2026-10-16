@@ -1,0 +1,68 @@
+[
+  {
+    "file": "sim-ac01120-z0008.json",
+    "url": "https://resultados-sim.tse.jus.br/simulado/simulado2026/ele2026/21270/dados/ac/ac01120-z0008-c0001-e021270-u.json",
+    "environment": "simulated",
+    "capturedAt": "2026-10-03T00:03:02.695Z",
+    "status": 200,
+    "bytes": 9903,
+    "sha256": "634c58d1c7269b61f59fbc6445c6b1af7a6c8ba005771a4049741f9bfd3120cf",
+    "etag": "\"91377aee9bd22448ae35d7853a48d0c7\"",
+    "lastModified": "Tue, 29 Sep 2026 19:30:20 GMT"
+  },
+  {
+    "file": "sim-ac01511-z0008.json",
+    "url": "https://resultados-sim.tse.jus.br/simulado/simulado2026/ele2026/21270/dados/ac/ac01511-z0008-c0001-e021270-u.json",
+    "environment": "simulated",
+    "capturedAt": "2026-10-03T00:03:04.194Z",
+    "status": 200,
+    "bytes": 9922,
+    "sha256": "8049f05dea7888edfc2db22d1bb709a57f2b45b61fda9e03f5ddd236a8544cd9",
+    "etag": "\"a07657ef70783bee31623b4d2b3cf9d2\"",
+    "lastModified": "Tue, 29 Sep 2026 19:30:21 GMT"
+  },
+  {
+    "file": "sim-ac01538-z0008.json",
+    "url": "https://resultados-sim.tse.jus.br/simulado/simulado2026/ele2026/21270/dados/ac/ac01538-z0008-c0001-e021270-u.json",
+    "environment": "simulated",
+    "capturedAt": "2026-10-03T00:03:05.433Z",
+    "status": 200,
+    "bytes": 9939,
+    "sha256": "f7286e9ceabb694968efdb62071ad7da6ea55f62d32776329a70a4a43fd36372",
+    "etag": "\"cea99653c57ffabae1444bda6f0f10f9\"",
+    "lastModified": "Tue, 29 Sep 2026 19:30:21 GMT"
+  },
+  {
+    "file": "sim-ba35572-z0153.json",
+    "url": "https://resultados-sim.tse.jus.br/simulado/simulado2026/ele2026/21270/dados/ba/ba35572-z0153-c0001-e021270-u.json",
+    "environment": "simulated",
+    "capturedAt": "2026-10-03T00:03:06.667Z",
+    "status": 200,
+    "bytes": 9946,
+    "sha256": "9d58ff67d031cb6a731bbb8e5790e99ebe400f0a988fc45fec4fdcf738eae509",
+    "etag": "\"952e8a956af78445bff0a3518bcdb808\"",
+    "lastModified": "Tue, 29 Sep 2026 19:30:04 GMT"
+  },
+  {
+    "file": "official-ea12.json",
+    "url": "https://resultados.tse.jus.br/oficial/ele2026/6257/config/mun-e006257-cm.json",
+    "environment": "official",
+    "capturedAt": "2026-10-03T00:03:07.970Z",
+    "status": 200,
+    "bytes": 534025,
+    "sha256": "dd8dcad73361a481b5110098ec812c1bda3f7acc12774fe6b0cf0be10ed2132b",
+    "etag": "\"9dbebd62b27910ab27d6004872f9c8d0\"",
+    "lastModified": "Fri, 02 Oct 2026 21:31:57 GMT"
+  },
+  {
+    "file": "official-ac01120-z0008.json",
+    "url": "https://resultados.tse.jus.br/oficial/ele2026/6257/dados/ac/ac01120-z0008-c0001-e006257-u.json",
+    "environment": "official",
+    "capturedAt": "2026-10-03T00:03:08.697Z",
+    "status": 200,
+    "bytes": 8517,
+    "sha256": "0f5feac5f2dd8c37d03774904121567eb0d298693f2bf3fe677c365e7c4f9232",
+    "etag": "\"db55d4eddab899a927616a6e7a945d39\"",
+    "lastModified": "Fri, 02 Oct 2026 23:15:04 GMT"
+  }
+]
