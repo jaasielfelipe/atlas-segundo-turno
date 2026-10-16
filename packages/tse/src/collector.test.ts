@@ -106,7 +106,11 @@ it('sobrepõe HTTP com gate único e reserva vaga e precedência para BR/UF', as
   expect(await c.tick(now, transport)).toBeNull(); // free slot reserved, zones still in flight
   c.hint('br', now);
   const again = c.tick(now, transport);
-  expect(started).toEqual(['br', 'a', 'b', 'br']);
+  // Two distinct zones (scattered order, not alphabetical), then BR again in the free slot.
+  expect(started).toHaveLength(4);
+  expect([started[0], started[3]]).toEqual(['br', 'br']);
+  expect(new Set(started.slice(1, 3)).size).toBe(2);
+  expect(started.slice(1, 3).every((k) => ['a', 'b', 'c'].includes(k))).toBe(true);
   finishes.slice(1).forEach((f) => f());
   await Promise.all([a, b, again]);
 });
@@ -162,4 +166,24 @@ it('bootstrap direcionado compartilha orçamento sem suspender a fila nacional',
   expect(c.jobs.get('br')?.suspended).toBe(false);
   expect(await c.tick(499, transport)).toBeNull();
   expect(await c.tick(500, transport)).toMatchObject({ key: 'br' });
+});
+it('ordem de varredura espalhada e estável: sem ordem alfabética de UF', async () => {
+  const c = new ConservativeCollector(500, 60000, undefined, 1);
+  const ufs = ['ac', 'al', 'am', 'ap', 'ba', 'ce', 'df', 'es', 'go', 'ma', 'mg', 'ms'];
+  for (const uf of ufs)
+    c.add({
+      key: `official:6258:2:zone:${uf}:00001:0001`,
+      url: `fixture:${uf}`,
+      kind: 'zone',
+      priority: 0,
+    });
+  const order: string[] = [];
+  for (let i = 0; i < ufs.length; i++)
+    await c.tick(i * 500, async (j) => {
+      order.push(j.key.split(':')[4]);
+      return { status: 200, bytes: 1 };
+    });
+  expect(order).toHaveLength(ufs.length);
+  expect(order).not.toEqual(ufs);
+  expect(new Set(order).size).toBe(ufs.length);
 });

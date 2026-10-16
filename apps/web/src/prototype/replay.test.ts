@@ -28,9 +28,9 @@ it('município = soma das versões mais recentes de seus segmentos; status por e
   expect(r.advanceTo(0)).toEqual([]);
   expect(r.municipalities[0]).toMatchObject({ sections: 15, totalized: 0, status: 'none' });
   const first = r.advanceTo(120);
-  expect(first.map((a) => [a.zone, a.addedSections, a.addedFlavio])).toEqual([
-    ['0001', 4, 60],
-    ['0002', 5, 10],
+  expect(first.map((a) => [a.zone, a.addedSections, a.addedFlavio, a.closes])).toEqual([
+    ['0001', 4, 60, false],
+    ['0002', 5, 10, false], // zone 0001 still open
   ]);
   expect(r.municipalities[0]).toMatchObject({
     totalized: 9,
@@ -42,7 +42,8 @@ it('município = soma das versões mais recentes de seus segmentos; status por e
   // Replaces (not adds) the segment's previous version.
   expect(r.municipalities[0]).toMatchObject({ totalized: 15, valid: 300, flavio: 150, lula: 125 });
   expect(r.municipalities[0].status).toBe('closed');
-  r.advanceTo(240);
+  expect(r.advanceTo(200)).toEqual([]);
+  expect(r.advanceTo(240).map((a) => a.closes)).toEqual([true]);
   expect(r.municipalities[1]).toMatchObject({ status: 'closed', flavio: 20, lula: 20 });
   expect(margin(r.municipalities[1]).leader).toBe(0);
   // Rewinding replays from the start without future information.

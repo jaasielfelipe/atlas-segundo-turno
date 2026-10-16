@@ -1,6 +1,6 @@
 import type { Arrival } from './replay';
 
-export type FeedItem = Arrival & { closes: boolean };
+export type FeedItem = Arrival;
 
 /**
  * Paced feed: bulletins arrive far faster than a screen can show at the peak (~22/s on the 1st

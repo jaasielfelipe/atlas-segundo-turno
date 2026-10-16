@@ -183,6 +183,8 @@ export class ConservativeCollector {
       (fairness ? 0 : b.priority - a.priority) ||
       a.due - b.due ||
       (a.lastAttempt ?? -1) - (b.lastAttempt ?? -1) ||
+      // Stable but scattered order: a sweep never paints the map UF by UF (alphabetical keys).
+      keyHash(a.key) - keyHash(b.key) ||
       a.key.localeCompare(b.key);
     let job: CollectJob | undefined;
     let aggregate: CollectJob | undefined;
@@ -236,9 +238,7 @@ export class ConservativeCollector {
         const cadence =
           job.kind === 'zone' && job.complete ? this.auditMs : (job.pollMs ?? this.pollMs);
         // Stable phase spreads audits across the window without postponing beyond one cadence.
-        let hash = 0;
-        for (const c of job.key) hash = (Math.imul(hash, 31) + c.charCodeAt(0)) >>> 0;
-        const phase = hash % cadence;
+        const phase = keyHash(job.key) % cadence;
         job.due =
           job.kind === 'zone' && job.complete
             ? (Math.floor((completed + this.intervalMs - phase) / cadence) + 1) * cadence + phase
@@ -274,4 +274,11 @@ export class ConservativeCollector {
       this.dirty.add(job.key);
     }
   }
+}
+
+/** Deterministic 32-bit hash of a job key (FNV-1a), for stable scattering. */
+export function keyHash(key: string) {
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < key.length; i++) hash = Math.imul(hash ^ key.charCodeAt(i), 0x01000193);
+  return hash >>> 0;
 }

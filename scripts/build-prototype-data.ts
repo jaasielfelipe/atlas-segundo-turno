@@ -1,4 +1,6 @@
 import Database from 'better-sqlite3';
+import { gunzipSync } from 'node:zlib';
+import { tseTimestamp } from '../packages/domain/src/index';
 import { mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 
 /**
@@ -46,7 +48,7 @@ const missing = municipalities.filter((m) => m.uf !== 'zz' && !mapped.has(m.id))
 const db = new Database(source, { readonly: true, fileMustExist: true });
 const rows = db
   .prepare(
-    `SELECT r.id, r.uf, r.municipality, r.zone, r.captured_at, r.total, r.totalized, r.valid,
+    `SELECT r.id, r.uf, r.municipality, r.zone, r.captured_at, r.total, r.totalized, r.valid, r.source_digest,
        (SELECT votes FROM zone_candidate_vote v WHERE v.result_id=r.id AND v.candidate_id=?) flavio,
        (SELECT votes FROM zone_candidate_vote v WHERE v.result_id=r.id AND v.candidate_id=?) lula
      FROM zone_result r WHERE r.environment='official' ORDER BY r.captured_at`,
@@ -56,17 +58,37 @@ const rows = db
   municipality: string;
   zone: string;
   captured_at: string;
+  source_digest: string;
+  generated?: string;
   total: number;
   totalized: number;
   valid: number | null;
   flavio: number | null;
   lula: number | null;
 }[];
+// Replay time = generation time written by the TSE in each file (dg/hg), not our capture time:
+// after the collector resumed at 19:20 it swept the queue UF by UF, which is not how the TSE
+// published. Capture time stays the tiebreak; a segment's versions never go back in time.
+const body = db.prepare('SELECT compressed FROM collector_body WHERE digest=?');
+const lastBySegment = new Map<string, string>();
+for (const r of rows) {
+  const j = JSON.parse(
+    gunzipSync((body.get(r.source_digest) as { compressed: Buffer }).compressed).toString('utf8'),
+  );
+  const key = `${r.uf}:${r.municipality}:${r.zone}`;
+  const generated = tseTimestamp(j.dg, j.hg);
+  const previous = lastBySegment.get(key);
+  r.generated = previous && previous > generated ? previous : generated;
+  lastBySegment.set(key, r.generated);
+}
+rows.sort(
+  (a, b) => a.generated!.localeCompare(b.generated!) || a.captured_at.localeCompare(b.captured_at),
+);
 db.close();
 const index = new Map(municipalities.map((m, i) => [m.id, i]));
 const segments: [number, string, number][] = [];
 const segmentIndex = new Map<string, number>();
-const base = Date.parse(rows[0].captured_at);
+const base = Date.parse(rows[0].generated!);
 // [seconds since base, segment, sections totalized, valid, flavio, lula]; null when unpublished.
 const events: (number | null)[][] = [];
 for (const r of rows) {
@@ -78,7 +100,7 @@ for (const r of rows) {
     segments.push([index.get(`${r.uf}:${r.municipality}`)!, r.zone, r.total]);
   }
   events.push([
-    Math.round((Date.parse(r.captured_at) - base) / 1000),
+    Math.round((Date.parse(r.generated!) - base) / 1000),
     s,
     r.totalized,
     r.valid,
@@ -89,7 +111,7 @@ for (const r of rows) {
 writeFileSync(
   `${out}/replay-round1.json`,
   JSON.stringify({
-    label: 'Replay do 1º turno (oficial TSE, 04–05/10/2026) — dados reais do 1º turno',
+    label: 'Replay do 1º turno (oficial TSE, 04–05/10/2026) — dados reais, horário de geração TSE',
     base: new Date(base).toISOString(),
     municipalities: municipalities.map((m) => [m.id, m.name]),
     segments,

@@ -29,6 +29,8 @@ export type Arrival = {
   addedValid: number;
   addedFlavio: number;
   addedLula: number;
+  /** This bulletin completed the last open segment of its municipality. */
+  closes: boolean;
 };
 
 /**
@@ -95,6 +97,7 @@ export class ReplayState {
       this.closedSegments[m] +=
         Number(after.totalized === sections) - Number(before.totalized === sections);
       this.latest[s] = after;
+      const was = mun.status;
       mun.status =
         this.closedSegments[m] === this.segmentCount[m]
           ? 'closed'
@@ -112,6 +115,7 @@ export class ReplayState {
           addedValid: after.valid - before.valid,
           addedFlavio: after.flavio - before.flavio,
           addedLula: after.lula - before.lula,
+          closes: was !== 'closed' && mun.status === 'closed',
         });
     }
     return arrivals;

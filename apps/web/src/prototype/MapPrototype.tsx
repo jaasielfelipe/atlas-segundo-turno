@@ -1,8 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 import maplibregl, { type ExpressionSpecification } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { height, margin, ReplayState, type HeightMode, type ReplayFile } from './replay';
-import { FeedQueue, type FeedItem } from './feed';
+import {
+  height,
+  margin,
+  ReplayState,
+  type Arrival,
+  type HeightMode,
+  type ReplayFile,
+} from './replay';
+import { FeedQueue } from './feed';
 import './prototype.css';
 
 // Colors follow the candidate (user decision): Flávio green, Lula red; dim while counting.
@@ -24,10 +31,14 @@ const BRAZIL: [[number, number], [number, number]] = [
   [-74.2, -33.9],
   [-34.6, 5.4],
 ];
-/** Real milliseconds between feed cards: readable at the peak, the queue picks what to show. */
-const FEED_PACE_MS = 900;
 const STATUS = { none: 0, counting: 1, closed: 2 } as const;
 const SPEEDS = [30, 60, 120, 300];
+/** Real milliseconds between closed-municipality cards; the queue picks what to show. */
+const CLOSED_PACE_MS = 1800;
+/** The zone stream shows every bulletin, flushed in small batches. */
+const STREAM_FLUSH_MS = 200;
+const STREAM_SIZE = 90;
+
 const int = (v: number) => new Intl.NumberFormat('pt-BR').format(Math.round(v));
 const pct = (v: number) =>
   new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(
@@ -55,12 +66,19 @@ const color: ExpressionSpecification = [
   ['case', ['>', leader, 0], C.flavioDim, C.lulaDim],
 ];
 
-type Feed = (FeedItem & { id: number; name: string })[];
+type Side = 'f' | 'l' | 't';
+const sideOf = (diff: number): Side => (diff > 0 ? 'f' : diff < 0 ? 'l' : 't');
+/** One zone bulletin in the fast stream (colour: who got more votes in this bulletin). */
+type Chip = { id: number; uf: string; name: string; zone: string; diff: number; side: Side };
+/** Final numbers of a municipality at the bulletin that closed it. */
+type Totals = { flavio: number; lula: number; valid: number; sections: number };
+type Closed = Totals & { id: number; uf: string; name: string };
 
 /**
- * Map prototype: municipalities rise and paint as the real 1st-round night replays. Height is the
- * leader's margin (three scales to compare), colour the leader, dim while counting, full when
- * every section is counted; a brief flash marks the municipality that just received a bulletin.
+ * Map prototype: municipalities rise and paint as the real 1st-round night replays (TSE
+ * generation time). Height is the leader's margin, colour the leader, dim while counting, full
+ * when every section is counted; a flash marks each bulletin. Two feeds: every zone bulletin as a
+ * fast stream, and municipalities that closed as slower, larger cards.
  */
 export default function MapPrototype() {
   const container = useRef<HTMLDivElement>(null);
@@ -77,8 +95,10 @@ export default function MapPrototype() {
     total: 0,
     perMinute: 0,
     waiting: 0,
+    tally: { f: 0, l: 0, t: 0 },
   });
-  const [feed, setFeed] = useState<Feed>([]);
+  const [stream, setStream] = useState<Chip[]>([]);
+  const [closed, setClosed] = useState<Closed[]>([]);
   const control = useRef({ speed, mode, scale, restart: () => {} });
   control.current.speed = speed;
   control.current.mode = mode;
@@ -97,22 +117,20 @@ export default function MapPrototype() {
       },
       center: [-53.5, -15],
       zoom: 3.55,
-      pitch: 48,
-      bearing: -8,
       attributionControl: false,
       maxPitch: 70,
     });
     map.current = m;
     m.on('load', async () => {
       try {
-        const [geo, ufs, file] = await Promise.all([
+        const [geo, ufGeo, file] = await Promise.all([
           fetch('/dev/municipios.geojson').then((r) => r.json()),
           fetch('/dev/ufs.geojson').then((r) => r.json()),
           fetch('/dev/replay-round1.json').then((r) => r.json() as Promise<ReplayFile>),
         ]);
         if (disposed) return;
         m.addSource('mun', { type: 'geojson', data: geo });
-        m.addSource('uf', { type: 'geojson', data: ufs });
+        m.addSource('uf', { type: 'geojson', data: ufGeo });
         m.addLayer({ id: 'land', type: 'fill', source: 'mun', paint: { 'fill-color': C.land } });
         m.addLayer({
           id: 'mun-lines',
@@ -145,34 +163,40 @@ export default function MapPrototype() {
             'fill-extrusion-vertical-gradient': true,
           },
         });
-
-        m.fitBounds(BRAZIL, {
+        // Frame Brazil flat, then tilt (fitBounds resets the camera).
+        const framed = m.cameraForBounds(BRAZIL, {
           padding: { top: 150, bottom: 110, left: 30, right: 30 },
-          duration: 0,
-        });
-        m.setPitch(48);
+        })!;
+        m.jumpTo({ ...framed, pitch: 48, bearing: -8 });
+
         const replay = new ReplayState(file);
-        const queue = new FeedQueue();
-        let lastCard = 0;
         const names = file.municipalities.map(([, name]) => name);
+        const ufs = file.municipalities.map(([key]) => key.slice(0, 2).toUpperCase());
         const featureOf = new Map<string, number>();
         for (const f of geo.features) featureOf.set(f.properties.id, f.id);
         const feature = file.municipalities.map(([id]) => featureOf.get(id));
         const n = file.municipalities.length;
+        const mapped = geo.features.length;
         const current = new Float64Array(n),
           target = new Float64Array(n),
           flash = new Float64Array(n);
         const active = new Set<number>();
         const totalSections = replay.municipalities.reduce((s, x) => s + x.sections, 0);
+        // Closed municipalities: paced queue (biggest and newest first). Zone stream: all, batched.
+        const queue = new FeedQueue();
+        const snapshots = new Map<Arrival, Totals>();
+        const recent: { at: number; side: Side }[] = [];
+        let pending: Chip[] = [];
         const start = replay.firstCount() - 120,
           end = replay.lastEvent();
         let simulated = start,
           last = performance.now(),
           lastHud = 0,
+          lastCard = 0,
+          lastFlush = 0,
           lastMode = control.current.mode,
           lastScale = control.current.scale,
           id = 0;
-        const mapped = geo.features.length;
         const retarget = (i: number) => {
           target[i] =
             height(replay.municipalities[i], control.current.mode) * control.current.scale;
@@ -193,7 +217,11 @@ export default function MapPrototype() {
           }
           active.clear();
           queue.clear();
-          setFeed([]);
+          snapshots.clear();
+          recent.length = 0;
+          pending = [];
+          setStream([]);
+          setClosed([]);
         };
         const tick = (now: number) => {
           if (disposed) return;
@@ -201,32 +229,55 @@ export default function MapPrototype() {
           last = now;
           simulated += (dt / 1000) * control.current.speed;
           if (simulated > end + 600) control.current.restart();
-          const arrivals = replay.advanceTo(simulated);
-          for (const a of arrivals) {
+          for (const a of replay.advanceTo(simulated)) {
             const i = a.municipality,
               s = replay.municipalities[i];
-            if (feature[i] === undefined) continue;
+            if (feature[i] === undefined) continue; // exterior / no geometry
             m.setFeatureState(
               { source: 'mun', id: feature[i]! },
               { status: STATUS[s.status], lead: margin(s).leader },
             );
             flash[i] = 1;
             retarget(i);
+            const diff = a.addedFlavio - a.addedLula;
+            pending.push({
+              id: id++,
+              uf: ufs[i],
+              name: names[i],
+              zone: a.zone,
+              diff,
+              side: sideOf(diff),
+            });
+            recent.push({ at: a.at, side: sideOf(diff) });
+            if (a.closes) {
+              snapshots.set(a, {
+                flavio: s.flavio,
+                lula: s.lula,
+                valid: s.valid,
+                sections: s.sections,
+              });
+              queue.push([a]);
+            }
           }
-          queue.push(
-            arrivals
-              .filter((a) => feature[a.municipality] !== undefined)
-              .map((a) => ({
-                ...a,
-                closes: replay.municipalities[a.municipality].status === 'closed',
-              })),
-          );
-          if (now - lastCard >= FEED_PACE_MS) {
+          while (recent.length && recent[0].at < simulated - 60) recent.shift();
+          if (now - lastFlush >= STREAM_FLUSH_MS && pending.length) {
+            lastFlush = now;
+            const batch = pending.slice(-STREAM_SIZE).reverse();
+            pending = [];
+            setStream((items) => [...batch, ...items].slice(0, STREAM_SIZE));
+          }
+          if (now - lastCard >= CLOSED_PACE_MS) {
             const card = queue.next();
             if (card) {
               lastCard = now;
-              const shown = { ...card, id: id++, name: names[card.municipality] };
-              setFeed((items) => [shown, ...items].slice(0, 30));
+              const shown: Closed = {
+                ...snapshots.get(card)!,
+                id: id++,
+                uf: ufs[card.municipality],
+                name: names[card.municipality],
+              };
+              snapshots.delete(card);
+              setClosed((items) => [shown, ...items].slice(0, 14));
             }
           }
           if (control.current.mode !== lastMode || control.current.scale !== lastScale) {
@@ -254,21 +305,24 @@ export default function MapPrototype() {
           if (now - lastHud > 250) {
             lastHud = now;
             let counted = 0,
-              closed = 0,
+              closedCount = 0,
               counting = 0;
             for (const s of replay.municipalities) {
               counted += s.totalized;
-              if (s.status === 'closed') closed++;
+              if (s.status === 'closed') closedCount++;
               else if (s.status === 'counting') counting++;
             }
+            const tally = { f: 0, l: 0, t: 0 };
+            for (const r of recent) tally[r.side]++;
             setHud({
               at: new Date(Date.parse(file.base) + simulated * 1000).toISOString(),
               counted: counted / totalSections,
-              closed,
+              closed: closedCount,
               counting,
               total: mapped,
-              perMinute: queue.lastMinute(simulated),
+              perMinute: recent.length,
               waiting: queue.waiting,
+              tally,
             });
           }
           frame = requestAnimationFrame(tick);
@@ -297,8 +351,8 @@ export default function MapPrototype() {
       <header className="proto-head">
         <h1>Protótipo · mapa por município</h1>
         <p>
-          <strong>Replay real do 1º turno</strong> (TSE, noite de 04/10/2026) para avaliar movimento
-          e escala. Não é o 2º turno.
+          <strong>Replay real do 1º turno</strong> (TSE, noite de 04/10/2026, horário de geração dos
+          arquivos) para avaliar movimento e escala. Não é o 2º turno.
         </p>
         <div className="proto-clock">
           <span>{hud.at ? clock(hud.at) : '—'}</span>
@@ -355,32 +409,74 @@ export default function MapPrototype() {
           <li>altura: vantagem do líder no município</li>
         </ul>
       </aside>
-      <div className="proto-feed-head">
-        <strong>Chegando agora</strong>
-        <span>
-          {int(hud.perMinute)} boletins no último minuto da apuração · {int(hud.waiting)} na fila
-        </span>
-      </div>
-      <ol className="proto-feed" aria-label="Chegando agora">
-        {feed.map((a) => (
-          <li key={a.id}>
-            <div className="where">
-              {a.name} <small>zona {Number(a.zone)}</small>
-            </div>
-            <div className="what">
-              +{a.addedSections} {a.addedSections === 1 ? 'seção' : 'seções'}{' '}
-              <small>
-                ({a.totalized}/{a.sections})
-              </small>
-              {a.closes && <span className="closed">município encerrado</span>}
-            </div>
-            <div className="votes">
-              <span className="f">Flávio +{int(a.addedFlavio)}</span>
-              <span className="l">Lula +{int(a.addedLula)}</span>
-            </div>
-          </li>
-        ))}
-      </ol>
+
+      <section className="proto-stream" aria-label="Boletins por zona">
+        <header>
+          <strong>Boletins por zona</strong>
+          <span>{int(hud.perMinute)} no último minuto da apuração</span>
+          <div className="tally" aria-label="Boletins do último minuto por quem teve mais votos">
+            {(['f', 'l', 't'] as const).map((k) =>
+              hud.tally[k] ? (
+                <i key={k} className={k} style={{ flexGrow: hud.tally[k] }}>
+                  {hud.tally[k] > 6 ? int(hud.tally[k]) : ''}
+                </i>
+              ) : null,
+            )}
+          </div>
+          <small>cor: quem teve mais votos no boletim</small>
+        </header>
+        <ol>
+          {stream.map((c) => (
+            <li key={c.id} className={c.side}>
+              <span className="place">
+                {c.uf} · {c.name} <small>z{Number(c.zone)}</small>
+              </span>
+              <span className="n">
+                {c.diff === 0 ? '±0' : `${c.side === 'f' ? 'F' : 'L'} +${int(Math.abs(c.diff))}`}
+              </span>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      <section className="proto-closed" aria-label="Municípios encerrados">
+        <header>
+          <strong>Municípios encerrados</strong>
+          <span>
+            {int(hud.closed)} de {int(hud.total)} · {int(hud.waiting)} aguardando vez na tela
+          </span>
+        </header>
+        <ol>
+          {closed.map((c) => {
+            const lead = sideOf(c.flavio - c.lula);
+            return (
+              <li key={c.id}>
+                <div className="where">
+                  {c.name} <small>{c.uf}</small>
+                </div>
+                <div className="split" aria-hidden="true">
+                  <i className="f" style={{ flexGrow: c.flavio }} />
+                  <i className="o" style={{ flexGrow: Math.max(0, c.valid - c.flavio - c.lula) }} />
+                  <i className="l" style={{ flexGrow: c.lula }} />
+                </div>
+                <div className="shares">
+                  <span className="f">Flávio {c.valid ? pct(c.flavio / c.valid) : '—'}</span>
+                  <span className="lead">
+                    {lead === 't'
+                      ? 'empate'
+                      : `${lead === 'f' ? 'Flávio' : 'Lula'} à frente por ${int(Math.abs(c.flavio - c.lula))} votos`}
+                  </span>
+                  <span className="l">Lula {c.valid ? pct(c.lula / c.valid) : '—'}</span>
+                </div>
+                <div className="meta">
+                  {int(c.sections)} seções · % dos válidos · cinza: demais candidaturas (só no 1º
+                  turno)
+                </div>
+              </li>
+            );
+          })}
+        </ol>
+      </section>
       {error && <p className="proto-error">{error}</p>}
     </div>
   );
