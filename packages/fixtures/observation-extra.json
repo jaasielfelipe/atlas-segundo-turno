@@ -46,5 +46,14 @@
     "capturedAt": "2026-10-02T17:23:31.386Z",
     "bytes": 31052,
     "sha256": "b4c9b49e2d9bad785402127043f1d4a0f5c5efa4ed63b6a2aceba89e2a374383"
+  },
+  {
+    "file": "maps/ne_50m_land.geojson",
+    "url": "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_50m_land.geojson",
+    "capturedAt": "2026-10-17T02:06:05.000Z",
+    "status": 200,
+    "bytes": 1636166,
+    "sha256": "e874b27a51d146452be360cafb3cc50c86001074a67d534113e6534682f9826b",
+    "note": "Natural Earth 1:50m land (domínio público), só contexto visual: outros continentes sob o Brasil."
   }
 ]

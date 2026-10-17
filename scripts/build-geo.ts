@@ -36,6 +36,8 @@ for (const file of readdirSync('packages/fixtures/maps').filter((f) =>
 }
 writeFileSync(`${out}/municipios.geojson`, JSON.stringify({ type: 'FeatureCollection', features }));
 writeFileSync(`${out}/ufs.geojson`, readFileSync('packages/fixtures/maps/br-ufs.geojson'));
+// Natural Earth 1:50m land (public domain): muted context for the other continents.
+writeFileSync(`${out}/land.geojson`, readFileSync('packages/fixtures/maps/ne_50m_land.geojson'));
 const missing = all.filter((m) => !m.id.startsWith('zz:') && !mapped.has(m.id));
 console.log(
   `${features.length} municípios com geometria · sem geometria: ${missing.map((m) => `${m.id} ${m.name}`).join(', ') || 'nenhum'}`,

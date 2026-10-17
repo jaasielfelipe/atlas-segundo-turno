@@ -32,12 +32,18 @@ const MIN_HEIGHT = 1500;
 
 /**
  * Surface experiments, from the URL (`/telao?superficie` = all): `globo` = globe projection with
- * sky and atmosphere; `grade` = graticule every 5°; `luz` = stronger directional light on prisms.
+ * a soft sky and atmosphere; `grade` = graticule every 5°; `luz` = stronger directional light on
+ * prisms; `continentes` = the other continents, muted (Natural Earth 1:50m land).
  */
 function surfaceOptions() {
   const q = new URLSearchParams(location.search);
   const all = q.has('superficie');
-  return { globe: all || q.has('globo'), grid: all || q.has('grade'), light: all || q.has('luz') };
+  return {
+    globe: all || q.has('globo'),
+    grid: all || q.has('grade'),
+    light: all || q.has('luz'),
+    continents: all || q.has('continentes'),
+  };
 }
 
 /** Meridians and parallels every `step` degrees, densely sampled so they curve on the globe. */
@@ -97,13 +103,14 @@ export default function MapView({ engine }: { engine: TelaoEngine }) {
           ? {
               projection: { type: 'globe' },
               sky: {
-                'sky-color': '#0d1420',
-                'horizon-color': '#1d3046',
+                // Soft: a thin halo on the horizon, not a glow.
+                'sky-color': '#0d1218',
+                'horizon-color': '#18263a',
                 'fog-color': '#0d1014',
-                'sky-horizon-blend': 0.6,
-                'horizon-fog-blend': 0.7,
-                'fog-ground-blend': 0.6,
-                'atmosphere-blend': ['interpolate', ['linear'], ['zoom'], 0, 1, 6, 0.7, 9, 0],
+                'sky-horizon-blend': 0.4,
+                'horizon-fog-blend': 0.6,
+                'fog-ground-blend': 0.7,
+                'atmosphere-blend': ['interpolate', ['linear'], ['zoom'], 0, 0.55, 6, 0.3, 9, 0],
               },
             }
           : {}),
@@ -112,7 +119,12 @@ export default function MapView({ engine }: { engine: TelaoEngine }) {
               light: { anchor: 'map', color: '#fff8ec', intensity: 0.55, position: [1.4, 215, 35] },
             }
           : {}),
-        sources: surface.grid ? { grid: { type: 'geojson', data: graticule() } } : {},
+        sources: {
+          ...(surface.grid ? { grid: { type: 'geojson' as const, data: graticule() } } : {}),
+          ...(surface.continents
+            ? { world: { type: 'geojson' as const, data: '/geo/land.geojson' } }
+            : {}),
+        },
         layers: [
           {
             id: 'bg',
@@ -133,6 +145,30 @@ export default function MapView({ engine }: { engine: TelaoEngine }) {
                       surface.globe ? '#28323f' : '#1e2733',
                     ] as ExpressionSpecification,
                     'line-width': ['case', ['get', 'equator'], 1, 0.6] as ExpressionSpecification,
+                  },
+                },
+              ]
+            : []),
+          // Other continents just above the ocean tone, under Brazil: no more island effect.
+          ...(surface.continents
+            ? [
+                {
+                  id: 'world',
+                  type: 'fill' as const,
+                  source: 'world',
+                  // The globe ocean is lighter than the flat background: land follows it.
+                  paint: {
+                    'fill-color': surface.globe ? '#1c242f' : '#161c24',
+                    'fill-antialias': true,
+                  },
+                },
+                {
+                  id: 'world-coast',
+                  type: 'line' as const,
+                  source: 'world',
+                  paint: {
+                    'line-color': surface.globe ? '#26303c' : '#1f2731',
+                    'line-width': 0.6,
                   },
                 },
               ]
