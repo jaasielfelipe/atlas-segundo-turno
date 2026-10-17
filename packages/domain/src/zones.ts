@@ -12,6 +12,8 @@ export type ZoneCounts = {
   blank: number | null;
   null: number | null;
   annulled: number | null;
+  /** Electorate of the counted sections (absent = this − turnout); not stored by old versions. */
+  countedElectorate?: number | null;
 };
 export type ZoneResult = ZoneSegment & {
   id: string;

@@ -27,7 +27,12 @@ export class Store {
     this.db.pragma('journal_mode = WAL');
     this.db.pragma('busy_timeout = 5000');
     // Sequential, transactional migrations; user_version = last applied.
-    const migrations = ['001_initial.sql', '002_zones.sql', '003_collector.sql'];
+    const migrations = [
+      '001_initial.sql',
+      '002_zones.sql',
+      '003_collector.sql',
+      '004_counted_electorate.sql',
+    ];
     const version = Number(this.db.pragma('user_version', { simple: true }));
     if (!Number.isInteger(version) || version < 0 || version > migrations.length)
       throw Error('Versão do banco não suportada');

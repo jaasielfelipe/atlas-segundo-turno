@@ -29,5 +29,16 @@
     "lastModified": "Thu, 15 Oct 2026 12:38:25 GMT",
     "etag": "\"8cfac16c5d817fe190b047c9235d7e90\"",
     "note": "Observação única pré-votação do 2º turno (contadores zerados); capturedAt registrado logo após o download (EA11 ~2 min antes)."
+  },
+  {
+    "file": "round2/ea20-president-ac01120-z0008.json",
+    "url": "https://resultados.tse.jus.br/oficial/ele2026/6258/dados/ac/ac01120-z0008-c0001-e006258-u.json",
+    "capturedAt": "2026-10-17T00:33:11.000Z",
+    "status": 200,
+    "bytes": 2862,
+    "sha256": "1af3e42c85261e484ebdca6084aafdf1bb86c054bb1a11b943641b8a9ca715b6",
+    "lastModified": "Tue, 13 Oct 2026 20:43:57 GMT",
+    "etag": "\"66301b87bf4f4924fe68278cd4e5788d\"",
+    "note": "Observação única pré-votação do 2º turno (contadores zerados)."
   }
 ]

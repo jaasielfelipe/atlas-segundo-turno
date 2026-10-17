@@ -25,7 +25,15 @@ it('armazena turnos separados, preserva nulos e recarrega até o instante', () =
       total: 1,
       totalized: 1,
       notTotalized: 0,
-      counts: { electorate: 10, turnout: 8, valid: 7, blank, null: 1, annulled: 0 },
+      counts: {
+        electorate: 10,
+        turnout: 8,
+        valid: 7,
+        blank,
+        null: 1,
+        annulled: 0,
+        countedElectorate: 10,
+      },
       candidates: [
         { id: 'f', votes: 4 },
         { id: 'l', votes: 3 },

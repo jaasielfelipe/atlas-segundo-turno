@@ -4,8 +4,7 @@ import { tseTimestamp } from '../packages/domain/src/index';
 import { mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 
 /**
- * Development data for the map/feed prototype (not committed, regenerable):
- *  - apps/web/public/dev/municipios.geojson: IBGE municipal meshes keyed by TSE id `uf:00000`;
+ * Development data for the prototypes and the telão demonstration (not committed, regenerable):
  *  - apps/web/public/dev/replay-round1.json: every município–zona version of the official 1st
  *    round night (04–05/10/2026) from the previous project's database, read only.
  * The replay is real 1st-round data used to see motion; it is never shown as the 2nd round.
@@ -17,33 +16,10 @@ mkdirSync(out, { recursive: true });
 const finalists = JSON.parse(readFileSync('packages/fixtures/round2/finalists.json', 'utf8'));
 const catalog = JSON.parse(readFileSync('packages/fixtures/zonal/official-ea12.json', 'utf8'));
 
-// TSE municipality id ↔ IBGE code (EA12 `cdi`), name; exterior has no geometry.
-const municipalities: { id: string; uf: string; ibge: string; name: string }[] = [];
+// TSE municipality ids and names (geometry: scripts/build-geo.ts).
+const municipalities: { id: string; name: string }[] = [];
 for (const uf of catalog.abr)
-  for (const m of uf.mu)
-    municipalities.push({ id: `${uf.cd}:${m.cd}`, uf: uf.cd, ibge: m.cdi, name: m.nm });
-const byIbge = new Map(municipalities.filter((m) => m.ibge).map((m) => [m.ibge, m]));
-
-const features = [];
-for (const file of readdirSync('packages/fixtures/maps').filter((f) =>
-  f.endsWith('-municipalities.geojson'),
-)) {
-  const g = JSON.parse(readFileSync(`packages/fixtures/maps/${file}`, 'utf8'));
-  for (const f of g.features) {
-    const m = byIbge.get(f.properties.codarea);
-    if (!m) throw Error(`Município IBGE sem correspondência TSE: ${f.properties.codarea}`);
-    features.push({
-      type: 'Feature',
-      id: features.length,
-      properties: { id: m.id, uf: m.uf, name: m.name },
-      geometry: f.geometry,
-    });
-  }
-}
-writeFileSync(`${out}/municipios.geojson`, JSON.stringify({ type: 'FeatureCollection', features }));
-writeFileSync(`${out}/ufs.geojson`, readFileSync('packages/fixtures/maps/br-ufs.geojson'));
-const mapped = new Set(features.map((f) => f.properties.id));
-const missing = municipalities.filter((m) => m.uf !== 'zz' && !mapped.has(m.id));
+  for (const m of uf.mu) municipalities.push({ id: `${uf.cd}:${m.cd}`, name: m.nm });
 
 const db = new Database(source, { readonly: true, fileMustExist: true });
 const rows = db
@@ -130,7 +106,4 @@ writeFileSync(
     events,
   }),
 );
-console.log(
-  `${features.length} geometrias · sem geometria: ${missing.map((m) => `${m.id} ${m.name}`).join(', ') || 'nenhum'} · ` +
-    `${segments.length} segmentos · ${events.length} versões`,
-);
+console.log(`${segments.length} segmentos · ${events.length} versões`);

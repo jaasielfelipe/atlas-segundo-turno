@@ -317,7 +317,7 @@ export class NationalCollection {
         ) as { source_digest: string } | undefined;
       if (last?.source_digest !== s.rawDigest) {
         const id = digest([job.key, capturedAt, s.rawDigest]);
-        db.prepare('INSERT INTO zone_result VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)').run(
+        db.prepare('INSERT INTO zone_result VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)').run(
           id,
           this.environment,
           s.electionId,
@@ -338,6 +338,7 @@ export class NationalCollection {
           z.counts.blank,
           z.counts.null,
           z.counts.annulled,
+          z.counts.countedElectorate,
         );
         const vote = db.prepare('INSERT INTO zone_candidate_vote VALUES(?,?,?)');
         for (const c of z.validCandidates) vote.run(id, c.id, c.votes);

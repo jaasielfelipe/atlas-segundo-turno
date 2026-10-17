@@ -60,6 +60,8 @@ export type MunicipalityState = {
 /** One município–zona file that brought newly counted sections (a feed card). */
 export type Arrival = {
   at: number;
+  /** Segment index in `file.segments`. */
+  segment: number;
   municipality: number;
   zone: string;
   addedSections: number;
@@ -233,6 +235,7 @@ export class ReplayState {
       if (after.totalized > before.totalized)
         arrivals.push({
           at,
+          segment: s,
           municipality: m,
           zone,
           addedSections: after.totalized - before.totalized,
@@ -245,6 +248,11 @@ export class ReplayState {
         });
     }
     return arrivals;
+  }
+  /** Latest version of segment `s` (votes and sections counted). */
+  segment(s: number) {
+    const x = this.latest[s];
+    return { totalized: x.totalized, valid: x.valid, flavio: x.flavio, lula: x.lula };
   }
   /** First instant with a counted section (seconds since base). */
   firstCount() {

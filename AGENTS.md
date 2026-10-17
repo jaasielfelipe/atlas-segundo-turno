@@ -31,6 +31,6 @@ Telão local ao vivo do 2º turno presidencial (25/10/2026) comparando o 2º tur
 - 16/10/2026: escopo “apenas presidente”; uso “telão ao vivo”; referência “primeiro turno vs segundo turno” (sem 2018/2022); repositório público.
 - Herdadas do 1º turno: taxa de 80 req/s; cores Lula = vermelho, Flávio = verde (por identidade, validadas para daltonismo); fatos aritméticos permitidos quando garantidos pelos números publicados.
 
-## Estado — 16/10/2026
+## Estado — 16/10/2026, noite
 
-Núcleo de coleta parametrizado por turno; motor `compareRounds` com testes; base do 1º turno construída e conciliada exatamente com o total nacional oficial. **Pendente:** API do telão, visuais (em discussão com o usuário), ensaio de coleta do 2º turno (simulado, se o TSE publicar).
+Telão completo em `/telao` (servidor `apps/api`, cliente `apps/web/src/telao`), decisões visuais do usuário aplicadas (mapa 3D por município com altura = vantagem em votos √; faixa de municípios encerrados sem descarte; fluxo de zonas discreto; mosaico de área fixa com só Flávio/Lula; corrida com câmera, pista inteira, fantasma por **troca exata** das zonas encerradas e efeito de vitória matemática). Ensaio oficial do 2º turno pré-votação: 2.232 requisições, 0 erros. Protótipos em `/prototipo/*`. Guia do dia: [docs/OPERACAO.md](docs/OPERACAO.md). **Não comprovado:** apuração real do 2º turno (a partir de 25/10).

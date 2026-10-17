@@ -3,6 +3,7 @@ import { FeedQueue, OnceQueue, type FeedItem } from './feed';
 
 const item = (at: number, addedSections: number, closes = false): FeedItem => ({
   at,
+  segment: at,
   municipality: at,
   zone: '0001',
   addedSections,

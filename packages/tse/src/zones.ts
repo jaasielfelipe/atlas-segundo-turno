@@ -105,6 +105,7 @@ export function normalizeZone(
       blank: snapshot.votes.blank,
       null: snapshot.votes.null,
       annulled: snapshot.votes.annulled,
+      countedElectorate: snapshot.electorate.totalized,
     },
     segment: { uf: context.uf, municipality: context.municipality, zone: context.zone },
     registryDigest: context.registry.digest,

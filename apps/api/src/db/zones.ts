@@ -10,6 +10,7 @@ type Row = Omit<ZoneResult, 'counts' | 'candidates'> & {
   blank: number | null;
   null_votes: number | null;
   annulled: number | null;
+  counted_electorate: number | null;
 };
 
 /** Normalized zone storage of one round: registry, segment versions and candidate votes. */
@@ -32,7 +33,7 @@ export class ZoneStore {
       const segment = db.prepare('INSERT OR IGNORE INTO zone_segment VALUES(?,?,?,?)');
       for (const s of data.segments) segment.run(registryId, s.uf, s.municipality, s.zone);
       const result = db.prepare(
-        'INSERT OR IGNORE INTO zone_result VALUES(@id,@environment,@election,@round,@uf,@municipality,@zone,@capturedAt,@sourceUrl,@sourceDigest,@status,@total,@totalized,@notTotalized,@electorate,@turnout,@valid,@blank,@null,@annulled)',
+        'INSERT OR IGNORE INTO zone_result VALUES(@id,@environment,@election,@round,@uf,@municipality,@zone,@capturedAt,@sourceUrl,@sourceDigest,@status,@total,@totalized,@notTotalized,@electorate,@turnout,@valid,@blank,@null,@annulled,@countedElectorate)',
       );
       const vote = db.prepare('INSERT INTO zone_candidate_vote VALUES(?,?,?)');
       for (const r of data.results) {
@@ -44,7 +45,10 @@ export class ZoneStore {
           throw Error('Ambiente/turno/eleição misturados');
         validateOrigin(r.sourceUrl, r.environment);
         const { counts, candidates, ...rest } = r;
-        if (result.run({ ...rest, ...counts }).changes)
+        if (
+          result.run({ ...rest, ...counts, countedElectorate: counts.countedElectorate ?? null })
+            .changes
+        )
           for (const c of candidates) vote.run(r.id, c.id, c.votes);
       }
     })();
@@ -60,7 +64,7 @@ export class ZoneStore {
     if (!registry) return null;
     const rows = db
       .prepare(
-        'SELECT id,environment,election,round,uf,municipality,zone,captured_at AS capturedAt,source_url AS sourceUrl,source_digest AS sourceDigest,status,total,totalized,not_totalized AS notTotalized,electorate,turnout,valid,blank,null_votes,annulled FROM zone_result WHERE environment=? AND round=? AND captured_at<=? ORDER BY captured_at',
+        'SELECT id,environment,election,round,uf,municipality,zone,captured_at AS capturedAt,source_url AS sourceUrl,source_digest AS sourceDigest,status,total,totalized,not_totalized AS notTotalized,electorate,turnout,valid,blank,null_votes,annulled,counted_electorate FROM zone_result WHERE environment=? AND round=? AND captured_at<=? ORDER BY captured_at',
       )
       .all(environment, round, at) as Row[];
     const votes = new Map<string, { id: string; votes: number }[]>();
@@ -80,11 +84,30 @@ export class ZoneStore {
           'SELECT uf,municipality,zone FROM zone_segment WHERE registry_id=? ORDER BY uf,municipality,zone',
         )
         .all(registry.id) as RoundData['segments'],
-      results: rows.map(({ electorate, turnout, valid, blank, null_votes, annulled, ...r }) => ({
-        ...r,
-        counts: { electorate, turnout, valid, blank, null: null_votes, annulled },
-        candidates: votes.get(r.id) ?? [],
-      })),
+      results: rows.map(
+        ({
+          electorate,
+          turnout,
+          valid,
+          blank,
+          null_votes,
+          annulled,
+          counted_electorate,
+          ...r
+        }) => ({
+          ...r,
+          counts: {
+            electorate,
+            turnout,
+            valid,
+            blank,
+            null: null_votes,
+            annulled,
+            countedElectorate: counted_electorate,
+          },
+          candidates: votes.get(r.id) ?? [],
+        }),
+      ),
     };
   }
 }

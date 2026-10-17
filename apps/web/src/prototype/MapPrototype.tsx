@@ -143,8 +143,8 @@ export default function MapPrototype() {
     m.on('load', async () => {
       try {
         const [geo, ufGeo, file] = await Promise.all([
-          fetch('/dev/municipios.geojson').then((r) => r.json()),
-          fetch('/dev/ufs.geojson').then((r) => r.json()),
+          fetch('/geo/municipios.geojson').then((r) => r.json()),
+          fetch('/geo/ufs.geojson').then((r) => r.json()),
           fetch('/dev/replay-round1.json').then((r) => r.json() as Promise<ReplayFile>),
         ]);
         if (disposed) return;

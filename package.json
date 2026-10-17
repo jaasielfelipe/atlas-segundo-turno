@@ -10,7 +10,7 @@
   "scripts": {
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "build": "pnpm typecheck && vite build --config apps/web/vite.config.ts",
+    "build": "pnpm typecheck && pnpm geo && vite build --config apps/web/vite.config.ts && tsup apps/api/src/index.ts --format esm --platform node --target node22 --out-dir dist/api --external better-sqlite3",
     "baseline:round1": "tsx scripts/build-baseline.ts",
     "baseline:refresh": "tsx scripts/refresh-baseline.ts",
     "collect:official:live": "tsx scripts/collect-live.ts official 2",
@@ -19,7 +19,10 @@
     "format": "prettier --write apps packages/domain/src packages/tse/src scripts *.ts package.json",
     "format:check": "prettier --check apps packages/domain/src packages/tse/src scripts *.ts package.json",
     "dev:web": "vite --config apps/web/vite.config.ts",
-    "prototype:data": "tsx scripts/build-prototype-data.ts"
+    "prototype:data": "pnpm geo && tsx scripts/build-prototype-data.ts",
+    "start": "node dist/api/index.js",
+    "dev:api": "tsx watch apps/api/src/index.ts",
+    "geo": "tsx scripts/build-geo.ts"
   },
   "dependencies": {
     "@fastify/static": "^8.2.0",
