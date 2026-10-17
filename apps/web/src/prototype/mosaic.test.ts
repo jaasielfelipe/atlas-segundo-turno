@@ -2,6 +2,22 @@ import { expect, it } from 'vitest';
 import { electorateByUf, marginPoints, mosaic, REGIONS, ufTotals } from './mosaic';
 import { ReplayState, type ReplayFile } from './replay';
 
+it('larguras: nenhum estado abaixo do mínimo e maior nunca mais estreito que menor', () => {
+  // Official electorate of the 28 units (millions): a single pass left GO/MA below the minimum
+  // and narrower than MS.
+  const e = [
+    8.61, 8.52, 5.73, 34.12, 16.37, 12.86, 2.99, 5.08, 2.64, 2.26, 2.02, 6.26, 2.8, 1.27, 1.18,
+    0.61, 0.58, 0.4, 11.31, 7.22, 7.0, 5.18, 3.25, 2.7, 2.66, 2.44, 1.74, 0.92,
+  ];
+  for (const min of [8, 18]) {
+    const w = mosaic(e, 740, 3, min);
+    expect(w.reduce((a, b) => a + b, 0) + 27 * 3).toBeCloseTo(740);
+    expect(Math.min(...w)).toBeGreaterThanOrEqual(min - 1e-9);
+    for (let i = 0; i < e.length; i++)
+      for (let j = 0; j < e.length; j++) if (e[i] > e[j]) expect(w[i]).toBeGreaterThanOrEqual(w[j]);
+  }
+});
+
 it('larguras proporcionais preenchem o total, com mínimo para UFs pequenas', () => {
   const w = mosaic([900, 90, 9, 1], 1000, 4, 30);
   expect(w.reduce((a, b) => a + b, 0) + 3 * 4).toBeCloseTo(1000);

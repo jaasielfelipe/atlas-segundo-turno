@@ -525,3 +525,13 @@
   height: 10px;
   margin-right: 2px;
 }
+
+/* Narrow states (a few px): the UF code stands vertically instead of overflowing. */
+.t-mosaic .uf.narrow {
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  letter-spacing: -2px;
+  font-size: 8.5px;
+  line-height: 1;
+  margin-top: 3px;
+}

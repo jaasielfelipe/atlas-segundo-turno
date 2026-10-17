@@ -416,7 +416,7 @@ function MosaicPanel({ engine }: { engine: TelaoEngine }) {
     ordered.map(([, o]) => o.electorate),
     Math.max(0, width - REGION_GAP * (groups.length - 1)),
     GAP,
-    18,
+    8, // minimum px: only the smallest states are widened (see mosaic())
   );
   const widthOf = new Map(ordered.map(([uf], i) => [uf, widths[i]]));
   return (
@@ -444,7 +444,9 @@ function MosaicPanel({ engine }: { engine: TelaoEngine }) {
                           style={{ height: `${(o.flavio / o.electorate) * 100}%` }}
                         />
                       </div>
-                      <span className="uf">{uf === 'zz' ? 'EXT' : uf.toUpperCase()}</span>
+                      <span className={w < 16 ? 'uf narrow' : 'uf'}>
+                        {uf === 'zz' ? 'EX' : uf.toUpperCase()}
+                      </span>
                     </div>
                   );
                 })}

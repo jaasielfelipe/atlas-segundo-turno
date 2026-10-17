@@ -11,17 +11,28 @@ export const REGIONS: { name: string; ufs: string[] }[] = [
 ];
 
 /**
- * Widths proportional to `weights` filling `total` px with `gap` between items; items below
- * `minWidth` get exactly `minWidth` and the rest share what is left (from the 1st-round telão).
+ * Widths proportional to `weights` filling `total` px with `gap` between items. Items that would
+ * be narrower than `minWidth` get exactly `minWidth`; the others share the rest proportionally.
+ * Repeated until stable: shrinking the others to make room can push more items below the
+ * minimum (a single pass let larger items end up narrower than smaller ones).
  */
 export function mosaic(weights: number[], total: number, gap: number, minWidth: number) {
   const usable = total - gap * Math.max(0, weights.length - 1);
-  const sum = weights.reduce((a, b) => a + b, 0);
-  if (!sum) return weights.map(() => usable / Math.max(1, weights.length));
-  const small = weights.map((w) => (w / sum) * usable < minWidth);
-  const reserved = small.filter(Boolean).length * minWidth;
-  const rest = weights.filter((_, i) => !small[i]).reduce((a, b) => a + b, 0);
-  return weights.map((w, i) => (small[i] ? minWidth : (w / rest) * (usable - reserved)));
+  const pinned = weights.map(() => false);
+  for (;;) {
+    const free = weights.reduce((a, w, i) => (pinned[i] ? a : a + w), 0);
+    const room = usable - pinned.filter(Boolean).length * minWidth;
+    if (free <= 0 || room <= 0) return weights.map(() => usable / Math.max(1, weights.length));
+    const scale = room / free;
+    let changed = false;
+    weights.forEach((w, i) => {
+      if (!pinned[i] && w * scale < minWidth) {
+        pinned[i] = true;
+        changed = true;
+      }
+    });
+    if (!changed) return weights.map((w, i) => (pinned[i] ? minWidth : w * scale));
+  }
 }
 
 export type UfTotals = {
