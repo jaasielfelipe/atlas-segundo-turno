@@ -71,22 +71,30 @@ export default function Telao() {
   useEffect(() => engine.start(), [engine]);
   useEngine(engine);
   const scale = useStageScale();
+  // ?fundo: the map is the background of the whole stage, Brazil framed where the map column was.
+  const background = params.has('fundo');
   return (
     <div className="t-viewport">
       <div
-        className="t-stage"
+        className={`t-stage ${background ? 'bg-map' : ''}`}
         style={{
           width: STAGE.width,
           height: STAGE.height,
           transform: `translate(-50%, -50%) scale(${scale})`,
         }}
       >
+        {background && (
+          <MapView
+            engine={engine}
+            className="t-map t-map-bg"
+            framing={{ top: 124, right: 850, bottom: 106, left: 270 }}
+            zoomBoost={0.25}
+          />
+        )}
         <Header engine={engine} />
         <main className="t-main">
           <ZoneStream engine={engine} />
-          <section className="t-center">
-            <MapView engine={engine} />
-          </section>
+          <section className="t-center">{!background && <MapView engine={engine} />}</section>
           <section className="t-right">
             <RacePanel engine={engine} />
             <MosaicPanel engine={engine} />

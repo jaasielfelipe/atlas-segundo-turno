@@ -443,3 +443,67 @@
     animation: none;
   }
 }
+
+/* ?fundo: the map behind the whole stage. Panels become transparent; data and text stay
+   opaque, with a soft shadow for reading over the map. */
+.t-map-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+.bg-map > :not(.t-map-bg) {
+  position: relative;
+  z-index: 1;
+}
+.bg-map .t-victory {
+  position: absolute;
+  z-index: 3;
+}
+.bg-map .t-error {
+  position: absolute;
+  z-index: 2;
+}
+.bg-map .ticker {
+  position: absolute;
+  z-index: 1;
+}
+.bg-map .t-head {
+  border-bottom-color: rgba(31, 38, 46, 0.6);
+  background: linear-gradient(180deg, rgba(13, 16, 20, 0.72), rgba(13, 16, 20, 0));
+}
+.bg-map .t-stream {
+  border-right: none;
+  background: linear-gradient(90deg, rgba(13, 16, 20, 0.55), rgba(13, 16, 20, 0));
+}
+.bg-map .ticker,
+.bg-map .ticker header {
+  background: rgba(13, 16, 20, 0.5);
+  border-color: rgba(31, 38, 46, 0.6);
+}
+.bg-map .t-mosaic .glass {
+  background: rgba(22, 27, 33, 0.45);
+}
+.bg-map .serp-asphalt {
+  stroke: rgba(29, 35, 43, 0.62);
+}
+.bg-map .t-map-legend {
+  left: 270px;
+  bottom: 84px;
+}
+.bg-map .t-head,
+.bg-map .t-stream,
+.bg-map .t-race,
+.bg-map .t-mosaic,
+.bg-map .ticker {
+  text-shadow:
+    0 0 3px rgba(5, 7, 10, 0.9),
+    0 0 8px rgba(5, 7, 10, 0.6);
+}
+.bg-map .serp-scale,
+.bg-map .serp-finish,
+.bg-map .serp-ghost text {
+  paint-order: stroke;
+  stroke: rgba(5, 7, 10, 0.85);
+  stroke-width: 3px;
+}

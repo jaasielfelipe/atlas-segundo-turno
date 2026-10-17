@@ -38,11 +38,13 @@ const MIN_HEIGHT = 1500;
 function surfaceOptions() {
   const q = new URLSearchParams(location.search);
   const all = q.has('superficie');
+  // `fundo` (map behind the whole stage) uses the approved look: globe with the continents.
+  const background = q.has('fundo');
   return {
-    globe: all || q.has('globo'),
+    globe: all || background || q.has('globo'),
     grid: all || q.has('grade'),
     light: all || q.has('luz'),
-    continents: all || q.has('continentes'),
+    continents: all || background || q.has('continentes'),
   };
 }
 
@@ -88,7 +90,21 @@ const color: ExpressionSpecification = [
  * leader's margin in votes (√), animated; a flash on each bulletin; slow camera sway. Driven by
  * the engine's zone versions (sums of each municipality's município–zona segments).
  */
-export default function MapView({ engine }: { engine: TelaoEngine }) {
+/** Screen area (px from each edge of the map canvas) where Brazil must be framed. */
+export type Framing = { top: number; right: number; bottom: number; left: number };
+
+export default function MapView({
+  engine,
+  framing = { top: 40, bottom: 30, left: 20, right: 20 },
+  zoomBoost = 0.1,
+  className = 't-map',
+}: {
+  engine: TelaoEngine;
+  framing?: Framing;
+  /** Extra zoom over the fitted frame (off-axis framing on the globe looks smaller). */
+  zoomBoost?: number;
+  className?: string;
+}) {
   const container = useRef<HTMLDivElement>(null);
   useEffect(() => {
     let disposed = false,
@@ -223,9 +239,9 @@ export default function MapView({ engine }: { engine: TelaoEngine }) {
         },
       });
       const framed = m.cameraForBounds(BRAZIL, {
-        padding: { top: 40, bottom: 30, left: 20, right: 20 },
+        padding: framing,
       })!;
-      m.jumpTo({ ...framed, zoom: (framed.zoom ?? 3.5) + 0.1, pitch: 46, bearing: -8 });
+      m.jumpTo({ ...framed, zoom: (framed.zoom ?? 3.5) + zoomBoost, pitch: 46, bearing: -8 });
 
       // Feature state needs the GeoJSON source parsed: wait for the first idle frame.
       await new Promise<void>((done) => m.once('idle', () => done()));
@@ -314,7 +330,7 @@ export default function MapView({ engine }: { engine: TelaoEngine }) {
     };
   }, [engine]);
   return (
-    <div className="t-map">
+    <div className={className}>
       <div ref={container} className="t-map-canvas" />
       <ul className="t-map-legend">
         <li>
