@@ -11,7 +11,11 @@ export type Official = {
   sections: number;
   totalized: number;
   electorate: number;
-  /** Abstentions in the counted sections (installed electorate − turnout). */
+  /**
+   * Registered voters of the counted sections who did not vote: counted electorate − turnout,
+   * including sections not installed. Registered − this − notValid is the largest valid total
+   * still possible: valid counted + electorate of the sections not counted yet.
+   */
   abstention: number;
   turnout: number;
   /** Turnout − valid: blank, null, annulled, sub judice. */
@@ -21,18 +25,27 @@ export type Official = {
   lula: number;
 };
 
+/** Versions per territory searched for the newest consistent aggregate. */
+const OFFICIAL_LOOKBACK = 10;
+
 type Finalists = { flavio: { id: string }; lula: { id: string } };
 
 export function summarize(s: Snapshot, finalists: Finalists): Official | null {
   if (s.votes.valid === null) return null;
-  const votes = (id: string) => s.candidates.find((c) => c.id === id)?.countedVotes ?? 0;
+  // Valid votes only (destination “Válido”, as in the zone files); before the count there are
+  // no destinations and every count is 0.
+  const votes = (id: string) =>
+    s.candidates.find((c) => c.id === id && c.destination === 'Válido')?.countedVotes ?? 0;
+  // Two-candidate round: the finalists' votes are the valid votes. Otherwise (a destination
+  // missing or changed) the file is not drawn: unknown is never shown as zero.
+  if (votes(finalists.flavio.id) + votes(finalists.lula.id) !== s.votes.valid) return null;
   return {
     capturedAt: s.capturedAt,
     generatedAt: s.sourceGeneratedAt,
     sections: s.sections.total,
     totalized: s.sections.totalized,
     electorate: s.electorate.total,
-    abstention: Math.max(0, s.electorate.installed - s.electorate.turnout),
+    abstention: Math.max(0, s.electorate.totalized - s.electorate.turnout),
     turnout: s.electorate.turnout,
     notValid: Math.max(0, (s.votes.total ?? s.electorate.turnout) - s.votes.valid),
     valid: s.votes.valid,
@@ -50,6 +63,8 @@ export class TelaoSource {
   private db: Database.Database | null = null;
   private baseline: Database.Database | null = null;
   private bootstrapCache: { key: string; value: ReturnType<TelaoSource['build']> } | null = null;
+  /** Segment versions not drawn because the finalists' votes do not add up to the valid votes. */
+  private readonly inconsistent = new Set<string>();
   readonly finalists: Finalists;
   constructor(
     readonly livePath: string,
@@ -82,11 +97,15 @@ export class TelaoSource {
       )
       .get() as { id: string; election: string; digest: string; captured_at: string } | undefined;
     if (!registry) return null;
+    // Segments with a 2nd-round version: their sizes replace the 1st-round ones. Rebuilt when the
+    // registry changes or a segment gets its first version (the collector's first sweep, before
+    // the polls close), so sizes never stay the 1st-round ones.
     const count = db
-      .prepare("SELECT COUNT(*) n FROM zone_result WHERE environment='official' AND round='2'")
+      .prepare(
+        "SELECT COUNT(*) n FROM (SELECT 1 FROM zone_result WHERE environment='official' AND round='2' GROUP BY uf, zone, municipality)",
+      )
       .get() as { n: number };
-    // Rebuilt only when the registry changes or the first versions of segments arrive.
-    const key = `${registry.digest}:${Math.min(count.n, 1)}`;
+    const key = `${registry.digest}:${count.n}`;
     if (this.bootstrapCache?.key !== key)
       this.bootstrapCache = { key, value: { ...this.build(db, registry), version: key } };
     return this.bootstrapCache.value;
@@ -173,14 +192,15 @@ export class TelaoSource {
   }
   /** Segment versions after `after` (rowid), as replay event tuples, at most `limit`. */
   events(after: number, limit = 20_000) {
+    // Unary + on the filters keeps SQLite on the rowid range (no sort of every version per poll).
     const boot = this.bootstrap();
-    if (!boot) return { events: [], last: after, version: null };
+    if (!boot) return { events: [], last: after, version: null, more: false };
     const rows = this.db!.prepare(
       `SELECT r.rowid rid, r.uf||':'||r.municipality||':'||r.zone k, r.captured_at at, r.totalized,
          r.valid, r.counted_electorate est, r.turnout,
          (SELECT votes FROM zone_candidate_vote v WHERE v.result_id=r.id AND v.candidate_id=?) flavio,
          (SELECT votes FROM zone_candidate_vote v WHERE v.result_id=r.id AND v.candidate_id=?) lula
-       FROM zone_result r WHERE r.environment='official' AND r.round='2' AND r.rowid>?
+       FROM zone_result r WHERE r.rowid>? AND +r.environment='official' AND +r.round='2'
        ORDER BY r.rowid LIMIT ?`,
     ).all(this.finalists.flavio.id, this.finalists.lula.id, after, limit) as {
       rid: number;
@@ -195,7 +215,12 @@ export class TelaoSource {
     }[];
     const base = Date.parse(boot.base);
     const events = rows
-      .filter((r) => boot.segmentIndex.has(r.k))
+      .filter((r) => {
+        // Two-candidate round: published votes must add up (a missing destination would read 0).
+        const ok = r.valid === null || (r.flavio ?? 0) + (r.lula ?? 0) === r.valid;
+        if (!ok) this.inconsistent.add(`zone:${r.rid}`);
+        return ok && boot.segmentIndex.has(r.k);
+      })
       .map((r) => [
         Math.round((Date.parse(r.at) - base) / 1000),
         boot.segmentIndex.get(r.k)!,
@@ -207,7 +232,13 @@ export class TelaoSource {
         r.turnout ?? 0,
         r.turnout !== null && r.valid !== null ? r.turnout - r.valid : 0,
       ]);
-    return { events, last: rows.at(-1)?.rid ?? after, version: boot.version };
+    return {
+      events,
+      last: rows.at(-1)?.rid ?? after,
+      version: boot.version,
+      /** The page was full: more versions are waiting. */
+      more: rows.length === limit,
+    };
   }
   /** Latest official EA20 aggregates of the 2nd round: Brazil, each UF and the exterior. */
   official() {
@@ -217,23 +248,27 @@ export class TelaoSource {
       .prepare(
         `SELECT territory_id t, payload FROM (
            SELECT territory_id, payload, ROW_NUMBER() OVER (PARTITION BY territory_id ORDER BY captured_at DESC, rowid DESC) rn
-           FROM snapshot WHERE environment='official' AND office='president') WHERE rn=1`,
+           FROM snapshot WHERE environment='official' AND office='president') WHERE rn<=?
+         ORDER BY territory_id, rn`,
       )
-      .all() as { t: string; payload: string }[];
+      .all(OFFICIAL_LOOKBACK) as { t: string; payload: string }[];
+    // Newest consistent version per territory: an inconsistent newer file is skipped (counted in
+    // the status), never drawn, and never blanks a territory that had consistent data.
     const out: Record<string, Official> = {};
     for (const r of rows) {
-      if (r.t.includes(':')) continue; // municipal aggregates of saved municipalities
+      if (r.t.includes(':') || out[r.t]) continue; // municipal aggregates; already resolved
       const s = JSON.parse(r.payload) as Snapshot;
       if (s.round !== '2') continue;
       const summary = summarize(s, this.finalists);
       if (summary) out[r.t] = summary;
+      else if (s.votes.valid !== null) this.inconsistent.add(`${r.t}:${s.capturedAt}`);
     }
     return out;
   }
   /** Collector lease and last heartbeat (rate, coverage), for the header. */
   status() {
     const db = this.open();
-    if (!db) return { collecting: false, collector: null };
+    if (!db) return { collecting: false, collector: null, inconsistent: 0 };
     const lease = db.prepare('SELECT expires FROM collector_owner WHERE id=1').get() as
       | { expires: number }
       | undefined;
@@ -247,7 +282,12 @@ export class TelaoSource {
     } catch {
       collector = null; // mid-write
     }
-    return { collecting: Boolean(lease && lease.expires > Date.now()), collector };
+    return {
+      collecting: Boolean(lease && lease.expires > Date.now()),
+      collector,
+      /** Files not drawn because the finalists' votes did not add up to the valid votes. */
+      inconsistent: this.inconsistent.size,
+    };
   }
   close() {
     this.db?.close();

@@ -136,10 +136,11 @@ function Header({ engine }: { engine: TelaoEngine }) {
   const won = winner(br);
   const collecting = engine.status?.collecting ?? false;
   const names = engine.mode === 'demo' ? DEMO_NAMES : NAMES;
-  // Exact change vs the 1st round on the closed município–zona units (runner − ghost).
+  // Exact change vs the 1st round on the closed município–zona units (runner − ghost); absent
+  // (not “+0”) until a unit closes.
   const n = engine.replay?.national;
   const delta =
-    engine.replay?.baseline && n
+    engine.replay?.baseline && n && n.ghost.complete.flavio + n.ghost.complete.lula > 0
       ? {
           flavio: n.flavio - n.ghost.exchange.flavio,
           lula: n.lula - n.ghost.exchange.lula,
@@ -181,7 +182,11 @@ function Header({ engine }: { engine: TelaoEngine }) {
           <i className={`dot ${collecting ? 'on' : ''}`} />
           {engine.mode === 'demo'
             ? `relógio do replay ${time(engine.at())}`
-            : `${collecting ? 'coletando' : 'coletor parado'} · boletim TSE ${time(br?.generatedAt ?? null)}`}
+            : `${collecting ? 'coletando' : 'coletor parado'} · boletim TSE ${time(br?.generatedAt ?? null)}${
+                engine.status?.inconsistent
+                  ? ` · ${engine.status.inconsistent} arquivo(s) inconsistente(s) não exibido(s)`
+                  : ''
+              }`}
         </small>
       </div>
     </header>
@@ -389,8 +394,8 @@ function RacePanel({ engine }: { engine: TelaoEngine }) {
 
 /**
  * States by region: area = registered voters (fixed). Lula's votes hang from the top, Flávio's
- * rise from the bottom, both as shares of the UF's registered voters; the gap between them is
- * everything else (other votes, absent, not counted yet) and closes as the count advances.
+ * rise from the bottom, both as shares of the largest valid total still possible in the UF (see
+ * bars()); the gap between them is what is not counted yet and closes when the count ends.
  */
 function MosaicPanel({ engine }: { engine: TelaoEngine }) {
   const board = useRef<HTMLDivElement>(null);

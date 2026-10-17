@@ -37,9 +37,11 @@ pnpm start                 # http://127.0.0.1:3201/telao
 | Mapa por município, fluxo de zonas, faixa de encerrados | Arquivos EA20 de cada município–zona (soma exata dos segmentos de cada município) |
 | Fantasmas e “margem vs 1º turno” | Mesmas município–zonas na base do 1º turno |
 
-Vitória matemática: só quando um finalista passa da metade do maior total de válidos ainda possível (aptos − abstenções apuradas − não válidos apurados) — o ponto em que cruza a meta ajustada na pista. Nenhum resultado das seções restantes muda o vencedor a partir daí; o letreiro informa que o resultado oficial é do TSE.
+Vitória matemática: só quando um finalista passa da metade do maior total de válidos ainda possível (válidos apurados + eleitorado das seções ainda não apuradas; eleitores de seções não instaladas contam como ausentes) — o ponto em que cruza a meta ajustada na pista. Nenhum resultado das seções restantes muda o vencedor a partir daí; o letreiro informa que o resultado oficial é do TSE.
 
 ## Incidentes
+
+- **Rodapé do cabeçalho com “arquivo(s) inconsistente(s) não exibido(s)”:** arquivos em que os votos dos dois finalistas não somam os válidos (destinação ausente ou alterada). O telão mantém a última versão consistente de cada território e não desenha a inconsistente. Anotar o horário; não exige ação imediata.
 
 - **403/429:** o coletor pausa ≥ 10 min sozinho e volta em rampa. Se repetir, reiniciar com `$env:TSE_RPS=40; pnpm collect:official:live`.
 - **Coletor caiu / computador reiniciou:** rodar de novo `pnpm collect:official:live`; ele retoma do banco.

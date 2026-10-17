@@ -60,7 +60,7 @@ export class TelaoEngine {
   file: ReplayFile | null = null;
   replay: ReplayState | null = null;
   official: { br: Official | null; ufs: Map<string, Official> } = { br: null, ufs: new Map() };
-  status: { collecting: boolean; collector: unknown } | null = null;
+  status: { collecting: boolean; collector: unknown; inconsistent?: number } | null = null;
   error = '';
   readonly closed = new OnceQueue<Closed>();
   /** Bumped on every change; React subscribes through `subscribe`/`version`. */
@@ -82,6 +82,8 @@ export class TelaoEngine {
   private frame = 0;
   private cursor = 0;
   private bootVersion = '';
+  /** One events poll at a time: a slow catch-up must not overlap the next tick. */
+  private polling = false;
   /** Each start() is a run; work from an older run (e.g. StrictMode remount) stops itself. */
   private run = 0;
   /** Demo clock (seconds since base) and speed (simulated seconds per real second). */
@@ -186,23 +188,37 @@ export class TelaoEngine {
     this.generation++;
   }
   private async pollEvents(): Promise<void> {
+    if (this.polling) return;
+    this.polling = true;
+    const run = this.run;
     try {
       if (!this.replay) await this.bootstrap();
-      const batch = await this.api<{ events: ReplayFile['events']; last: number; version: string }>(
-        `/api/telao/events?after=${this.cursor}`,
-      );
-      if (batch.version && batch.version !== this.bootVersion) {
-        await this.bootstrap(); // registry or segment sizes changed: rebuild from scratch
-        return this.pollEvents();
-      }
-      if (batch.events.length) {
-        this.file!.events.push(...batch.events);
-        this.cursor = batch.last;
-        this.deliver(this.replay!.advanceTo(Number.MAX_SAFE_INTEGER));
+      // Pages until caught up (a reload in the middle of the night has every version to read).
+      for (let page = 0; page < 50 && run === this.run; page++) {
+        const batch = await this.api<{
+          events: ReplayFile['events'];
+          last: number;
+          version: string;
+          more: boolean;
+        }>(`/api/telao/events?after=${this.cursor}`);
+        if (run !== this.run) break;
+        if (batch.version && batch.version !== this.bootVersion) {
+          await this.bootstrap(); // registry or segment sizes changed: rebuild from scratch
+          continue;
+        }
+        if (batch.last !== this.cursor) {
+          this.file!.events.push(...batch.events);
+          this.cursor = batch.last;
+          this.deliver(this.replay!.advanceTo(Number.MAX_SAFE_INTEGER));
+          this.emit();
+        }
+        if (!batch.more) break;
       }
       this.error = '';
     } catch (e) {
       this.error = (e as Error).message;
+    } finally {
+      this.polling = false;
     }
     this.emit();
   }
