@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalS
 import Ticker, { type TickerItem } from '../prototype/Ticker';
 import { Serpentine, VictoryBanner, zoomBump, type TrackView } from '../prototype/Serpentine';
 import { makeTrack } from '../prototype/track';
-import { marginPoints, mosaic, REGIONS } from '../prototype/mosaic';
+import { mosaic, REGIONS } from '../prototype/mosaic';
 import type { Arrival } from '../prototype/replay';
 import MapView from './MapView';
 import { adjustedTarget, TelaoEngine, winner, type Mode, type Official } from './engine';
@@ -13,6 +13,8 @@ import './telao.css';
 
 const STAGE = { width: 1920, height: 1080 };
 const NAMES = { f: 'Flávio Bolsonaro', l: 'Lula' } as const;
+/** Synthetic numbers never sit next to real names: neutral labels in the demonstration. */
+const DEMO_NAMES = { f: 'Candidatura verde', l: 'Candidatura vermelha' } as const;
 /** Track length in votes: 55% of registered voters. */
 const TRACK_SHARE = 0.55;
 /** Highlighted increment on the track: votes gained in the last 5 minutes of bulletins. */
@@ -62,8 +64,10 @@ function useStageScale() {
  * API; `/telao?demo`: the real 1st-round replay turned into a SYNTHETIC 2nd round, labelled.
  */
 export default function Telao() {
-  const mode: Mode = new URLSearchParams(location.search).has('demo') ? 'demo' : 'live';
-  const engine = useMemo(() => new TelaoEngine(mode), [mode]);
+  const params = new URLSearchParams(location.search);
+  const mode: Mode = params.has('demo') ? 'demo' : 'live';
+  // ?demo&vitoria: demonstration starting just before the (synthetic) mathematical victory.
+  const engine = useMemo(() => new TelaoEngine(mode, params.has('vitoria')), [mode]);
   useEffect(() => engine.start(), [engine]);
   useEngine(engine);
   const scale = useStageScale();
@@ -79,9 +83,9 @@ export default function Telao() {
       >
         <Header engine={engine} />
         <main className="t-main">
-          <section className="t-left">
+          <ZoneStream engine={engine} />
+          <section className="t-center">
             <MapView engine={engine} />
-            <ZoneStream engine={engine} />
           </section>
           <section className="t-right">
             <RacePanel engine={engine} />
@@ -108,6 +112,7 @@ export default function Telao() {
           backlog={() => engine.closed.waiting}
         />
         {engine.error && <p className="t-error">{engine.error}</p>}
+        <VictoryOverlay engine={engine} />
       </div>
     </div>
   );
@@ -119,6 +124,7 @@ function Header({ engine }: { engine: TelaoEngine }) {
   const valid = br ? br.flavio + br.lula : 0;
   const won = winner(br);
   const collecting = engine.status?.collecting ?? false;
+  const names = engine.mode === 'demo' ? DEMO_NAMES : NAMES;
   return (
     <header className="t-head">
       <div className="t-title">
@@ -132,12 +138,12 @@ function Header({ engine }: { engine: TelaoEngine }) {
       </div>
       <div className="t-score">
         <div className={`cand f ${won === 'f' ? 'won' : ''}`}>
-          <span className="name">{NAMES.f}</span>
+          <span className="name">{names.f}</span>
           <span className="share">{valid ? pct(br!.flavio / valid) : '—'}</span>
           <span className="votes">{br ? int(br.flavio) : '—'}</span>
         </div>
         <div className={`cand l ${won === 'l' ? 'won' : ''}`}>
-          <span className="name">{NAMES.l}</span>
+          <span className="name">{names.l}</span>
           <span className="share">{valid ? pct(br!.lula / valid) : '—'}</span>
           <span className="votes">{br ? int(br.lula) : '—'}</span>
         </div>
@@ -252,8 +258,9 @@ function ZoneStream({ engine }: { engine: TelaoEngine }) {
         </small>
       </header>
       <ol>
-        {chips.map((c) => (
-          <li key={c.id} className={c.side}>
+        {chips.map((c, i) => (
+          // Only the newest lines slide in; a big batch must not blank the list.
+          <li key={c.id} className={`${c.side} ${i < 8 ? 'new' : ''}`}>
             <span className="place">
               {c.uf} · {c.name} <small>z{Number(c.zone)}</small>
             </span>
@@ -266,18 +273,19 @@ function ZoneStream({ engine }: { engine: TelaoEngine }) {
 }
 
 /**
- * Race on the official national aggregate: camera on the leader, the whole track beside it,
+ * Race on the official national aggregate: the whole track as main piece, the camera on the
+ * leader as picture-in-picture over the part of the track no runner can reach (beyond ~45% of
+ * the registered voters),
  * ghosts = official count with the closed município–zona units swapped for their 1st-round votes
  * (exact; distance to the runner is the change on those units), mathematical victory effect.
  */
 function RacePanel({ engine }: { engine: TelaoEngine }) {
   const camera = useMemo(() => makeTrack({ n: 8, width: 1880, radius: 28 }), []);
-  const whole = useMemo(() => makeTrack({ n: 10, width: 640, radius: 22, top: 40, side: 16 }), []);
+  const whole = useMemo(() => makeTrack({ n: 10, width: 780, radius: 25, top: 46, side: 18 }), []);
   const [view, setView] = useState<TrackView | null>(null);
   const state = useRef({
     shown: { flavio: 0, lula: 0, target: 0, gf: 0, gl: 0 },
     history: [] as { t: number; flavio: number; lula: number }[],
-    victory: null as { winner: 'f' | 'l'; at: number } | null,
     generation: -1,
   });
   useEffect(() => {
@@ -291,7 +299,6 @@ function RacePanel({ engine }: { engine: TelaoEngine }) {
       if (s.generation !== engine.generation) {
         s.generation = engine.generation;
         s.history = [];
-        s.victory = null;
         s.shown = { flavio: 0, lula: 0, target: 0, gf: 0, gl: 0 };
       }
       if (br) {
@@ -314,16 +321,14 @@ function RacePanel({ engine }: { engine: TelaoEngine }) {
         if (!s.history.length || t - s.history.at(-1)!.t >= 30_000)
           s.history.push({ t, flavio: br.flavio, lula: br.lula });
         while (s.history.length > 2 && s.history[1].t < t - INCREMENT_MS) s.history.shift();
-        const w = winner(br);
-        if (w && !s.victory) s.victory = { winner: w, at: now };
-        if (!w) s.victory = null;
+        const v = engine.victory;
         setView({
           flavio: s.shown.flavio,
           lula: s.shown.lula,
           target: s.shown.target,
           ghost: swap ? { flavio: s.shown.gf, lula: s.shown.gl } : null,
           before: s.history[0] ?? { flavio: 0, lula: 0 },
-          victory: s.victory ? { winner: s.victory.winner, elapsed: now - s.victory.at } : null,
+          victory: v ? { winner: v.winner, elapsed: now - v.at } : null,
         });
       }
       frame = requestAnimationFrame(step);
@@ -339,27 +344,19 @@ function RacePanel({ engine }: { engine: TelaoEngine }) {
     then > 0 ? `${now >= then ? '+' : '−'}${mi(Math.abs(now - then))}` : '—';
   return (
     <section className={`t-race ${view.victory ? `won ${view.victory.winner}` : ''}`}>
-      <div className="t-camera race-camera">
-        <Serpentine
-          track={camera}
-          view={view}
-          total={total}
-          fixed={br.electorate / 2}
-          camera={{ zoom: 4 + 2 * zoomBump(view.victory?.elapsed ?? null), aspect: 600 / 470 }}
-        />
-        {view.victory && (
-          <VictoryBanner
-            {...view.victory}
-            name={
-              engine.mode === 'demo'
-                ? `${view.victory.winner === 'f' ? 'candidatura verde' : 'candidatura vermelha'} · 2º turno sintético`
-                : NAMES[view.victory.winner]
-            }
+      <div className="t-track">
+        <Serpentine track={whole} view={view} total={total} fixed={br.electorate / 2} />
+        <div className="t-pip race-camera" aria-label="Câmera no líder">
+          <Serpentine
+            track={camera}
+            view={view}
+            total={total}
+            fixed={br.electorate / 2}
+            camera={{ zoom: 4 + 2 * zoomBump(view.victory?.elapsed ?? null), aspect: 330 / 190 }}
           />
-        )}
+        </div>
       </div>
-      <div className="t-whole">
-        <Serpentine track={whole} view={view} total={total} fixed={br.electorate / 2} compact />
+      <div className="t-race-foot">
         {view.ghost && (
           <dl className="race-ghost">
             <div>
@@ -378,14 +375,18 @@ function RacePanel({ engine }: { engine: TelaoEngine }) {
         )}
         <p className="race-note">
           Pista: 0–55% dos aptos · linha amarela: meta ajustada (metade dos válidos ainda possíveis)
-          · anel: zonas encerradas com os votos do 1º turno
+          · anel: zonas encerradas com os votos do 1º turno · janela: câmera no líder
         </p>
       </div>
     </section>
   );
 }
 
-/** States by region: area = registered voters (fixed); Flávio and Lula as shares of it. */
+/**
+ * States by region: area = registered voters (fixed). Lula's votes hang from the top, Flávio's
+ * rise from the bottom, both as shares of the UF's registered voters; the gap between them is
+ * everything else (other votes, absent, not counted yet) and closes as the count advances.
+ */
 function MosaicPanel({ engine }: { engine: TelaoEngine }) {
   const board = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(0);
@@ -414,51 +415,29 @@ function MosaicPanel({ engine }: { engine: TelaoEngine }) {
     18,
   );
   const widthOf = new Map(ordered.map(([uf], i) => [uf, widths[i]]));
-  const side = (m: number | null) => (m === null ? '' : m > 0 ? 'f' : m < 0 ? 'l' : 't');
   return (
     <section className="t-mosaic" aria-label="Apuração por UF">
       <div className="t-mosaic-board" ref={board}>
         {groups.map((g) => {
-          const sum = (k: keyof Official) => g.rows.reduce((a, [, o]) => a + (o[k] as number), 0);
-          const m = marginPoints({ valid: sum('valid'), flavio: sum('flavio'), lula: sum('lula') });
           const regionWidth =
             g.rows.reduce((a, [uf]) => a + (widthOf.get(uf) ?? 0), 0) +
             GAP * Math.max(0, g.rows.length - 1);
           return (
             <div key={g.name} className="mos-region" style={{ width: `${regionWidth}px` }}>
-              <h2>
-                <span>
-                  {g.name}{' '}
-                  <span className={`margin ${side(m)}`}>
-                    {m === null ? '' : `+${Math.round(Math.abs(m))}`}
-                  </span>
-                </span>
-                <small>
-                  {sum('sections')
-                    ? `${Math.round((sum('totalized') / sum('sections')) * 100)}%`
-                    : '—'}
-                </small>
-              </h2>
+              <h2>{g.name}</h2>
               <div className="mos-cols">
                 {g.rows.map(([uf, o]) => {
                   const w = widthOf.get(uf) ?? 0;
-                  const mu = marginPoints(o);
                   return (
                     <div key={uf} className="mos-col" style={{ width: `${w}px` }}>
-                      <span
-                        className={`margin ${side(mu)}`}
-                        style={{ fontSize: `${Math.max(9, Math.min(15, w * 0.32))}px` }}
-                      >
-                        {mu === null ? '' : `+${Math.round(Math.abs(mu))}`}
-                      </span>
                       <div className="glass">
-                        <i
-                          className="band flavio"
-                          style={{ height: `${(o.flavio / o.electorate) * 100}%` }}
-                        />
                         <i
                           className="band lula"
                           style={{ height: `${(o.lula / o.electorate) * 100}%` }}
+                        />
+                        <i
+                          className="band flavio"
+                          style={{ height: `${(o.flavio / o.electorate) * 100}%` }}
                         />
                       </div>
                       <span className="uf">{uf === 'zz' ? 'EXT' : uf.toUpperCase()}</span>
@@ -471,9 +450,77 @@ function MosaicPanel({ engine }: { engine: TelaoEngine }) {
         })}
       </div>
       <p className="mos-legend">
-        área: eleitores aptos · cores: votos de cada um · vazio: demais aptos e não apurado ·
-        número: vantagem do líder (p.p. dos válidos)
+        área: eleitores aptos · vermelho desce do topo, verde sobe da base · vazio entre eles:
+        demais aptos e ainda não apurado
       </p>
     </section>
+  );
+}
+
+/**
+ * Mathematical victory over the whole telão: edge glow in the winner's colour, fireworks across
+ * the stage and the banner in the middle for 8 s; afterwards only the header keeps the mark.
+ * Shown only when guaranteed by the published numbers; nothing animated under reduced motion.
+ */
+function VictoryOverlay({ engine }: { engine: TelaoEngine }) {
+  const [elapsed, setElapsed] = useState<number | null>(null);
+  useEffect(() => {
+    let frame = 0;
+    const step = () => {
+      const v = engine.victory;
+      setElapsed(v ? performance.now() - v.at : null);
+      frame = requestAnimationFrame(step);
+    };
+    frame = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(frame);
+  }, [engine]);
+  const v = engine.victory;
+  if (!v || elapsed === null || elapsed > 9000) return null;
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const name =
+    engine.mode === 'demo'
+      ? `${v.winner === 'f' ? 'candidatura verde' : 'candidatura vermelha'} · 2º turno sintético`
+      : NAMES[v.winner];
+  return (
+    <div className={`t-victory ${v.winner} ${elapsed > 8000 ? 'leaving' : ''}`}>
+      {!reduced && <StageBursts elapsed={elapsed} winner={v.winner} />}
+      <VictoryBanner winner={v.winner} elapsed={Math.min(elapsed, 6999)} name={name} />
+    </div>
+  );
+}
+
+/** Five deterministic fireworks across the stage, each 2 s, staggered over the first 3.5 s. */
+function StageBursts({ elapsed, winner }: { elapsed: number; winner: 'f' | 'l' }) {
+  const origins = [
+    [960, 430, 0],
+    [520, 300, 500],
+    [1400, 320, 900],
+    [700, 700, 1400],
+    [1250, 680, 1900],
+  ];
+  const parts = [];
+  for (const [x, y, delay] of origins) {
+    const t = (elapsed - delay) / 2000;
+    if (t < 0 || t > 1) continue;
+    for (let i = 0; i < 40; i++) {
+      const angle = (i / 40) * Math.PI * 2 + delay;
+      const speed = 160 + ((i * 53 + delay) % 120);
+      const d = speed * (1 - (1 - t) ** 2);
+      parts.push(
+        <circle
+          key={`${delay}-${i}`}
+          cx={x + Math.cos(angle) * d}
+          cy={y + Math.sin(angle) * d + 80 * t * t}
+          r={5 * (1 - t) + 1}
+          className={`burst ${winner} ${i % 3 === 0 ? 'light' : ''}`}
+          style={{ opacity: 1 - t }}
+        />,
+      );
+    }
+  }
+  return (
+    <svg className="t-bursts" viewBox="0 0 1920 1080" aria-hidden="true">
+      {parts}
+    </svg>
   );
 }

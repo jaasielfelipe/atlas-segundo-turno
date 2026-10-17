@@ -101,7 +101,7 @@ export default function MapView({ engine }: { engine: TelaoEngine }) {
         },
       });
       const framed = m.cameraForBounds(BRAZIL, {
-        padding: { top: 60, bottom: 40, left: 20, right: 250 }, // zone stream on the right
+        padding: { top: 40, bottom: 30, left: 20, right: 20 },
       })!;
       m.jumpTo({ ...framed, zoom: (framed.zoom ?? 3.5) + 0.1, pitch: 46, bearing: -8 });
 

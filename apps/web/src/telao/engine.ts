@@ -49,6 +49,13 @@ export class TelaoEngine {
   generation = 0;
   /** 1st-round final votes per segment (finalists, valid); null without a baseline. */
   firstRoundSegments: FirstRound[] | null = null;
+  /** Mathematical victory and when it was first observed (performance.now()). */
+  victory: { winner: 'f' | 'l'; at: number } | null = null;
+  private updateVictory() {
+    const w = winner(this.official.br);
+    if (w && this.victory?.winner !== w) this.victory = { winner: w, at: performance.now() };
+    if (!w) this.victory = null; // only a rewind or a correction can undo it
+  }
   private listeners = new Set<() => void>();
   private arrivalListeners = new Set<(a: Arrival[]) => void>();
   private timers: number[] = [];
@@ -60,7 +67,11 @@ export class TelaoEngine {
   /** Demo clock (seconds since base) and speed (simulated seconds per real second). */
   demo = { simulated: 0, speed: 60, start: 0, end: 0 };
 
-  constructor(readonly mode: Mode) {}
+  /** `jumpToVictory` (demo): start a few seconds before the mathematical victory. */
+  constructor(
+    readonly mode: Mode,
+    readonly jumpToVictory = false,
+  ) {}
 
   subscribe = (listener: () => void) => {
     this.listeners.add(listener);
@@ -154,6 +165,7 @@ export class TelaoEngine {
     this.cursor = 0;
     this.bootVersion = boot.version;
     this.closed.clear();
+    this.victory = null;
     this.generation++;
   }
   private async pollEvents(): Promise<void> {
@@ -184,6 +196,7 @@ export class TelaoEngine {
         br: all.br ?? null,
         ufs: new Map(Object.entries(all).filter(([k]) => k !== 'br')),
       };
+      this.updateVictory();
     } catch (e) {
       this.error = (e as Error).message;
     }
@@ -231,6 +244,18 @@ export class TelaoEngine {
         this.demo.start = this.replay.firstCount() - 60;
         this.demo.end = this.replay.lastEvent();
         this.demo.simulated = this.demo.start;
+        if (this.jumpToVictory) {
+          // First replay instant with a victory, found on a scratch copy of the state.
+          const scan = new ReplayState(file);
+          for (const e of file.events) {
+            scan.advanceTo(e[0]);
+            if (winner(fromNational(scan.national, ''))) {
+              this.demo.simulated = e[0] - 30;
+              break;
+            }
+          }
+          this.demo.speed = 20;
+        }
         this.generation++;
         let lastFrame = performance.now(),
           lastEmit = 0;
@@ -266,6 +291,7 @@ export class TelaoEngine {
               ),
             };
             this.status = { collecting: true, collector: null };
+            this.updateVictory();
             this.emit();
           }
           this.frame = requestAnimationFrame(step);
@@ -282,6 +308,7 @@ export class TelaoEngine {
     this.demo.simulated = this.demo.start;
     this.replay.reset();
     this.closed.clear();
+    this.victory = null;
     this.generation++;
   }
   /** Current instant: demo clock, or the latest official capture in live mode. */

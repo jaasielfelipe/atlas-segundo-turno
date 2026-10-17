@@ -71,3 +71,12 @@ Append-only. Separar sempre: sintético (fixture), simulado TSE, oficial TSE.
 - **API** (`pnpm start`, `127.0.0.1:3201`): bootstrap (cadastro, nomes do EA12, tamanhos por segmento, base do 1º turno completa para 6.292 segmentos), boletins incrementais por rowid, agregados oficiais e estado do coletor; testes com arquivos oficiais reais do 2º turno (inclui zona AC 01120/0008 capturada em 16/10) e sem acervo (503).
 - **Telão** (`/telao`): placar e corrida pelo agregado oficial BR; mosaico pelos agregados oficiais das UFs; mapa, fluxo e faixa pelas zonas; fantasma = oficial − diferença exata nas zonas encerradas. Palco 1920×1080 escalado: sem rolagem em 1920×1080 e 1366×768; sem erro de página ao vivo e na demonstração (`/telao?demo`, 2º turno sintético rotulado).
 - **Não comprovado:** apuração real do 2º turno (a partir de 25/10/2026).
+
+## 16/10/2026 — layout revisto e vitória global
+
+- Boletins por zona em coluna própria no extremo esquerdo; mapa centralizado.
+- Mosaico mais baixo e sem números: Lula desce do topo, Flávio sobe da base (frações dos aptos de cada UF); o vazio entre eles é o restante e se fecha com a apuração.
+- Pista inteira como peça principal; câmera do líder em janela (picture-in-picture) sobre a parte da pista que nenhum corredor alcança.
+- Vitória matemática vira estado do motor e evento do telão inteiro: letreiro central, fogos na cor do vencedor e brilho nas bordas por ~9 s; depois só a marca no placar. `/telao?demo&vitoria` começa a demonstração 30 s antes da vitória sintética.
+- Na demonstração, o placar e o letreiro usam “candidatura verde/vermelha” — números sintéticos nunca ao lado de nomes reais.
+- Verificações: typecheck, 72 testes, build, formatação; capturas ao vivo (1920×1080 e 1366×768, sem rolagem) e da vitória na demonstração, sem erro de página.

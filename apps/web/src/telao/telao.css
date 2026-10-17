@@ -130,15 +130,15 @@
   box-shadow: 0 0 6px var(--flavio);
 }
 
-/* Main: map (with the zone stream over the ocean) | race + mosaic. */
+/* Main: zone stream | map (centre) | race + mosaic. */
 .t-main {
   display: grid;
-  grid-template-columns: 1060px 1fr;
+  grid-template-columns: 220px 1fr 800px;
   gap: 14px;
   padding: 8px 16px 6px;
   min-height: 0;
 }
-.t-left {
+.t-center {
   position: relative;
   min-height: 0;
 }
@@ -166,18 +166,15 @@
   vertical-align: -1px;
 }
 .t-stream {
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  width: 232px;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(90deg, rgba(13, 16, 20, 0) 0%, rgba(13, 16, 20, 0.82) 22%);
+  min-height: 0;
   overflow: hidden;
+  border-right: 1px solid #1f262e;
+  padding-right: 8px;
 }
 .t-stream header {
-  padding: 4px 0 6px 40px;
+  padding: 4px 0 6px;
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -192,7 +189,7 @@
 }
 .t-stream ol {
   margin: 0;
-  padding: 0 0 0 40px;
+  padding: 0;
   list-style: none;
   overflow: hidden;
 }
@@ -203,6 +200,8 @@
   font-size: 10.5px;
   line-height: 13.5px;
   white-space: nowrap;
+}
+.t-stream li.new {
   animation: drop 260ms ease-out;
 }
 .t-stream .place {
@@ -226,15 +225,60 @@
 
 .t-right {
   display: grid;
-  grid-template-rows: 470px 1fr;
+  grid-template-rows: 1fr 250px;
   gap: 10px;
   min-height: 0;
 }
 .t-race {
   display: grid;
-  grid-template-columns: 1fr 248px;
-  gap: 10px;
+  grid-template-rows: 1fr auto;
+  gap: 6px;
   min-height: 0;
+}
+.t-track {
+  position: relative;
+  min-height: 0;
+}
+.t-track > .serp {
+  width: 100%;
+  height: 100%;
+}
+/* Picture-in-picture camera over the part of the track no runner reaches (bottom left). */
+.t-pip {
+  position: absolute;
+  left: 4px;
+  bottom: 4px;
+  width: 330px;
+  height: 190px;
+  border: 1px solid #3a424d;
+  border-radius: 4px;
+  overflow: hidden;
+  background: #10141a;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.6);
+}
+.t-pip .serp {
+  width: 100%;
+  height: 100%;
+}
+.t-race-foot {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 18px;
+  align-items: center;
+}
+.t-race-foot .race-ghost {
+  flex-direction: row;
+  gap: 18px;
+}
+.t-race-foot .race-ghost div {
+  gap: 8px;
+  font-size: 11px;
+}
+.t-race-foot .race-ghost dd {
+  font-size: 18px;
+}
+.t-race-foot .race-note {
+  font-size: 10.5px;
 }
 .t-race.empty {
   display: grid;
@@ -290,10 +334,24 @@
   overflow: hidden;
 }
 .t-mosaic .mos-region h2 {
-  font-size: 11px;
+  margin-bottom: 3px;
+  font-size: 10.5px;
 }
-.t-mosaic .mos-region h2 small {
-  font-size: 10px;
+/* Lula hangs from the top, Flávio rises from the bottom; the gap closes as votes come in. */
+.t-mosaic .glass {
+  position: relative;
+  display: block;
+}
+.t-mosaic .band {
+  position: absolute;
+  left: 0;
+  right: 0;
+}
+.t-mosaic .band.lula {
+  top: 0;
+}
+.t-mosaic .band.flavio {
+  bottom: 0;
 }
 .t-mosaic .mos-cols {
   gap: 3px;
@@ -309,6 +367,53 @@
   font-size: 11px;
 }
 
+/* Global mathematical victory. */
+.t-victory {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  animation: edge 1.6s ease-in-out 3;
+  transition: opacity 900ms ease;
+}
+.t-victory.f {
+  --glow: rgba(51, 171, 100, 0.55);
+}
+.t-victory.l {
+  --glow: rgba(224, 85, 85, 0.55);
+}
+@keyframes edge {
+  50% {
+    box-shadow: inset 0 0 120px 30px var(--glow);
+  }
+}
+.t-victory.leaving {
+  opacity: 0;
+}
+.t-bursts {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.t-victory .victory {
+  top: 46%;
+  padding: 32px 64px;
+}
+.t-victory .victory strong {
+  font-size: 104px;
+}
+.t-victory .victory span {
+  font-size: 34px;
+}
+.t-victory .victory small {
+  font-size: 16px;
+  max-width: 820px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .t-victory {
+    animation: none;
+  }
+}
 .t-error {
   position: absolute;
   left: 24px;
