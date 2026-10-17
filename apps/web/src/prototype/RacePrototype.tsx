@@ -3,6 +3,7 @@ import {
   finalVotes,
   ReplayState,
   synthetic2T,
+  victor,
   type NationalState,
   type Pair,
   type ReplayFile,
@@ -42,7 +43,24 @@ type View = {
   ghost: Pair;
   /** Votes 5 minutes earlier (increment start). */
   before: Pair;
+  /** Mathematical victory: who and how long ago (ms of real time) it was first observed. */
+  victory: { winner: 'f' | 'l'; elapsed: number } | null;
 };
+
+/** First replay instant (seconds) with a mathematical victory, or null. */
+function victoryTime(replay: ReplayState) {
+  replay.reset();
+  for (const e of replay.file.events) {
+    replay.advanceTo(e[0]);
+    if (victor(replay.national)) {
+      const at = e[0];
+      replay.reset();
+      return at;
+    }
+  }
+  replay.reset();
+  return null;
+}
 
 /**
  * Race prototype: a race camera that follows the leader (main piece) and the whole track beside
@@ -55,7 +73,15 @@ export default function RacePrototype() {
   const [speed, setSpeed] = useState(120);
   const [mode, setMode] = useState<GhostMode>('exchange');
   const [error, setError] = useState('');
-  const control = useRef({ speed, mode, restart: () => {} });
+  const control = useRef({
+    speed,
+    mode,
+    restart: () => {},
+    /** Jump to a few seconds before the mathematical victory. */
+    toVictory: () => {},
+    /** Replay the effect without moving the clock. */
+    replayEffect: () => {},
+  });
   control.current.speed = speed;
   control.current.mode = mode;
 
@@ -69,8 +95,10 @@ export default function RacePrototype() {
         const replay = new ReplayState(synthetic2T(file), finalVotes(file));
         const start = replay.firstCount() - 60,
           end = replay.lastEvent();
+        const crossing = victoryTime(replay);
         let simulated = start,
           last = performance.now();
+        let victoryAt: { winner: 'f' | 'l'; at: number } | null = null;
         let shown = { flavio: 0, lula: 0, target: 0, ghost: { flavio: 0, lula: 0 } };
         let history: { at: number; flavio: number; lula: number }[] = [];
         control.current.restart = () => {
@@ -78,6 +106,16 @@ export default function RacePrototype() {
           replay.reset();
           shown = { flavio: 0, lula: 0, target: 0, ghost: { flavio: 0, lula: 0 } };
           history = [];
+          victoryAt = null;
+        };
+        control.current.toVictory = () => {
+          if (crossing === null) return;
+          control.current.restart();
+          simulated = crossing - 40;
+          victoryAt = null;
+        };
+        control.current.replayEffect = () => {
+          if (victoryAt) victoryAt = { ...victoryAt, at: performance.now() };
         };
         const step = (now: number) => {
           if (disposed) return;
@@ -87,6 +125,9 @@ export default function RacePrototype() {
           if (simulated > end + 300) control.current.restart();
           replay.advanceTo(simulated);
           const nat = replay.national;
+          const winner = victor(nat);
+          if (winner && !victoryAt) victoryAt = { winner, at: now };
+          if (!winner) victoryAt = null; // only a rewind can undo it
           // Half of the valid votes still possible: registered − abstentions − non-valid so far.
           const abstentions = nat.countedElectorate - nat.turnout;
           const target = Math.max(0, (nat.electorate - abstentions - nat.notValid) / 2);
@@ -113,6 +154,7 @@ export default function RacePrototype() {
             nat: { ...nat, ghost: { ...nat.ghost } },
             ...shown,
             before: history[0] ?? { flavio: 0, lula: 0 },
+            victory: victoryAt ? { winner: victoryAt.winner, elapsed: now - victoryAt.at } : null,
           });
           frame = requestAnimationFrame(step);
         };
@@ -172,16 +214,21 @@ export default function RacePrototype() {
           </select>
         </label>
         <button onClick={() => control.current.restart()}>Recomeçar</button>
+        <button onClick={() => control.current.toVictory()}>Ir para a vitória</button>
+        <button onClick={() => control.current.replayEffect()} disabled={!view.victory}>
+          Repetir efeito
+        </button>
       </header>
 
-      <section className="race-camera">
+      <section className={`race-camera ${view.victory ? `won ${view.victory.winner}` : ''}`}>
         <Serpentine
           track={long}
           view={view}
           total={total}
           fixed={nat.electorate / 2}
-          camera={{ zoom: 4, aspect: 1240 / 880 }}
+          camera={{ zoom: 4 + 2 * zoomBump(view.victory?.elapsed ?? null), aspect: 1240 / 880 }}
         />
+        {view.victory && <VictoryBanner {...view.victory} />}
       </section>
 
       <aside className="race-whole">
@@ -248,6 +295,7 @@ function Serpentine({
     return { ticks, labels, asphalt: total > 0 ? path(track, 0, total, 0, total, 6) : '' };
   }, [track, total, compact]);
   if (total <= 0) return null;
+  const won = view.victory?.winner ?? null;
   const runners = [
     {
       key: 'f',
@@ -316,7 +364,7 @@ function Serpentine({
         </text>
       ))}
       {runners.map((r) => (
-        <g key={r.key} className={r.key}>
+        <g key={r.key} className={`${r.key} ${won === r.key ? 'won' : ''}`}>
           {r.before > 0 && (
             <path d={path(track, 0, r.before, r.lane, total)} className="serp-progress" />
           )}
@@ -360,10 +408,18 @@ function Serpentine({
             cx={p.x}
             cy={p.y}
             r={compact ? 5 : 8}
-            className={`serp-head ${r.key}`}
+            className={`serp-head ${r.key} ${won === r.key ? 'won' : ''}`}
           />
         );
       })}
+      {camera &&
+        won &&
+        view.victory &&
+        (() => {
+          const r = runners.find((x) => x.key === won)!;
+          const p = point(track, along(track, r.votes, total), r.lane);
+          return <Bursts x={p.x} y={p.y} elapsed={view.victory.elapsed} winner={won} />;
+        })()}
       {edge.map((e, i) => (
         <g key={i} className={`serp-behind ${e.key} ${e.ghost ? 'ghost' : ''}`}>
           <circle cx={e.x} cy={e.y} r={e.ghost ? 7 : 9} />
@@ -378,5 +434,79 @@ function Serpentine({
         </text>
       )}
     </svg>
+  );
+}
+
+const reduced = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
+
+/** Camera push-in on the winner: rises in 1 s, holds 3 s, eases back in 1.5 s. */
+function zoomBump(elapsed: number | null) {
+  if (elapsed === null || reduced()) return 0;
+  const t = elapsed / 1000;
+  if (t < 1) return 1 - (1 - t) ** 3;
+  if (t < 4) return 1;
+  if (t < 5.5) return 1 - (t - 4) / 1.5;
+  return 0;
+}
+
+/**
+ * Three bursts of particles in the winner's colour from the runner's head (0, 0.7 and 1.4 s),
+ * each 1.8 s long. Deterministic angles and speeds; nothing under reduced motion.
+ */
+function Bursts({
+  x,
+  y,
+  elapsed,
+  winner,
+}: {
+  x: number;
+  y: number;
+  elapsed: number;
+  winner: 'f' | 'l';
+}) {
+  if (reduced() || elapsed > 3400) return null;
+  const parts = [];
+  for (let b = 0; b < 3; b++) {
+    const t = (elapsed - b * 700) / 1800;
+    if (t < 0 || t > 1) continue;
+    for (let i = 0; i < 28; i++) {
+      const angle = (i / 28) * Math.PI * 2 + b * 0.37;
+      const speed = 70 + ((i * 37 + b * 11) % 50);
+      const d = speed * (1 - (1 - t) ** 2);
+      parts.push(
+        <circle
+          key={`${b}-${i}`}
+          cx={x + Math.cos(angle) * d}
+          cy={y + Math.sin(angle) * d + 30 * t * t}
+          r={3.2 * (1 - t) + 0.8}
+          className={`burst ${winner} ${i % 3 === 0 ? 'light' : ''}`}
+          style={{ opacity: 1 - t }}
+        />,
+      );
+    }
+  }
+  return <g aria-hidden="true">{parts}</g>;
+}
+
+/**
+ * Victory banner: enters large over the camera, then settles into a corner badge after 7 s.
+ * Names the winner only in the live telão; this prototype runs on synthetic data.
+ */
+function VictoryBanner({ winner, elapsed }: { winner: 'f' | 'l'; elapsed: number }) {
+  const settled = elapsed > 7000;
+  return (
+    <div className={`victory ${winner} ${settled ? 'settled' : ''}`} role="status">
+      <strong>Vitória matemática</strong>
+      <span>
+        {winner === 'f' ? 'candidatura verde' : 'candidatura vermelha'} · demonstração com 2º turno
+        sintético
+      </span>
+      {!settled && (
+        <small>
+          garantida pelos números publicados, qualquer que seja o resultado das seções restantes ·
+          sujeita a retificação · resultado oficial: TSE
+        </small>
+      )}
+    </div>
   );
 }

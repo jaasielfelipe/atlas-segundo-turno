@@ -1,5 +1,13 @@
 import { expect, it } from 'vitest';
-import { finalVotes, height, margin, ReplayState, synthetic2T, type ReplayFile } from './replay';
+import {
+  finalVotes,
+  height,
+  margin,
+  ReplayState,
+  synthetic2T,
+  victor,
+  type ReplayFile,
+} from './replay';
 
 // Synthetic: municipality 0 has two segments (zones 0001 and 0002), municipality 1 has one.
 const file: ReplayFile = {
@@ -116,3 +124,26 @@ it('2º turno sintético: só redistribui os demais entre os finalistas; válido
   expect(fake.label).toMatch(/SINTÉTICO/);
   expect(finalVotes(real)[0]).toEqual({ flavio: 60, lula: 30 });
 });
+
+it('vitória matemática: só quando passa da metade dos válidos ainda possíveis', () => {
+  const nat = {
+    sections: 10,
+    totalized: 8,
+    electorate: 1000,
+    countedElectorate: 800,
+    turnout: 640, // 160 absent so far
+    notValid: 40,
+    valid: 600,
+    flavio: 330,
+    lula: 270,
+    ghost: { complete: zero(), proportional: zero(), exchange: zero() },
+  };
+  // Largest valid total still possible: 1000 − 160 − 40 = 800; half = 400.
+  expect(victor(nat)).toBeNull();
+  expect(victor({ ...nat, flavio: 401 })).toBe('f');
+  expect(victor({ ...nat, lula: 400 })).toBeNull(); // exactly half is not a majority
+  expect(victor({ ...nat, flavio: 100, lula: 450 })).toBe('l');
+});
+function zero() {
+  return { flavio: 0, lula: 0 };
+}

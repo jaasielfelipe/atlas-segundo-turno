@@ -315,3 +315,14 @@ export function synthetic2T(file: ReplayFile): ReplayFile {
     }),
   };
 }
+
+/**
+ * Mathematical victory in a two-candidate round: a finalist has more than half of the largest
+ * valid total still possible (registered − abstentions − non-valid counted so far), i.e. crossed
+ * the adjusted target. No result of the remaining sections can change it.
+ */
+export function victor(nat: NationalState): 'f' | 'l' | null {
+  const abstentions = nat.countedElectorate - nat.turnout;
+  const target = (nat.electorate - abstentions - nat.notValid) / 2;
+  return nat.flavio > target ? 'f' : nat.lula > target ? 'l' : null;
+}

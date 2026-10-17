@@ -376,3 +376,109 @@ body,
 .synthetic {
   color: #e2b85a;
 }
+
+/* Mathematical victory. */
+.race-camera {
+  position: relative;
+}
+.won .serp-progress {
+  animation: glow 1.6s ease-in-out infinite;
+}
+@keyframes glow {
+  50% {
+    stroke-width: 11;
+    filter: brightness(1.35);
+  }
+}
+.serp-head.won {
+  animation: pulse 1.2s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+@keyframes pulse {
+  50% {
+    transform: scale(1.6);
+  }
+}
+.burst.f {
+  fill: var(--flavio);
+}
+.burst.l {
+  fill: var(--lula-fill);
+}
+.burst.light.f {
+  fill: var(--flavio-inc);
+}
+.burst.light.l {
+  fill: var(--lula-inc);
+}
+.victory {
+  position: absolute;
+  left: 50%;
+  top: 38%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 22px 40px;
+  border-radius: 6px;
+  background: rgba(13, 16, 20, 0.86);
+  text-align: center;
+  animation: enter 900ms cubic-bezier(0.2, 1.4, 0.4, 1);
+  transition:
+    top 900ms ease,
+    left 900ms ease,
+    transform 900ms ease,
+    padding 900ms ease;
+}
+@keyframes enter {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.6);
+  }
+}
+.victory strong {
+  font-size: 64px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  line-height: 1;
+}
+.victory span {
+  font-size: 18px;
+  color: var(--text);
+}
+.victory small {
+  font-size: 13px;
+  color: var(--muted);
+  max-width: 560px;
+}
+.victory.f strong {
+  color: var(--flavio);
+  text-shadow: 0 0 24px rgba(51, 171, 100, 0.55);
+}
+.victory.l strong {
+  color: var(--lula);
+  text-shadow: 0 0 24px rgba(224, 85, 85, 0.55);
+}
+.victory.settled {
+  left: 16px;
+  top: 16px;
+  transform: none;
+  align-items: flex-start;
+  padding: 10px 16px;
+  animation: none;
+}
+.victory.settled strong {
+  font-size: 24px;
+}
+.victory.settled span {
+  font-size: 13px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .won .serp-progress,
+  .serp-head.won,
+  .victory {
+    animation: none;
+  }
+}

@@ -12,11 +12,11 @@ import {
 import './mosaic.css';
 
 const SPEEDS = [30, 60, 120, 300];
-const WIDTH = 1840,
-  GAP = 6,
-  REGION_GAP = 26,
-  MIN = 30;
-const BANDS = ['flavio', 'lula', 'others', 'notValid', 'absent'] as const;
+const GAP = 4,
+  REGION_GAP = 18,
+  MIN = 24;
+/** Only the two finalists; everything else of the electorate is the empty remainder. */
+const BANDS = ['flavio', 'lula'] as const;
 
 const pct0 = (v: number) => `${Math.round(v * 100)}%`;
 const pp = (v: number) => `+${Math.round(Math.abs(v))}`;
@@ -30,8 +30,10 @@ const side = (m: number | null) => (m === null ? '' : m > 0 ? 'f' : m < 0 ? 'l' 
 
 /**
  * State mosaic: one fixed box per UF, width proportional to registered voters, all the same
- * height, so area is voters. Inside, the whole electorate stacked in horizontal bands from the
- * bottom (Flávio, Lula, others, blank/null, absent); the empty top is what is not counted yet.
+ * height, so area is voters. Inside, only Flávio and Lula as shares of the UF's registered
+ * voters, stacked from the bottom; the rest of the box is the remainder of the electorate
+ * (others, blank/null, absent and not counted yet). Widths come from the measured board, so the
+ * whole country fits any screen.
  * One number per UF: the leader's margin in percentage points of the valid votes, in the
  * leader's colour. Sizes never change during the count. Real 1st-round replay.
  */
@@ -41,6 +43,15 @@ export default function MosaicPrototype() {
   const [error, setError] = useState('');
   const control = useRef({ speed, restart: () => {} });
   control.current.speed = speed;
+  const board = useRef<HTMLElement>(null);
+  const [boardWidth, setBoardWidth] = useState(0);
+  useEffect(() => {
+    const el = board.current;
+    if (!el) return;
+    const observer = new ResizeObserver(([entry]) => setBoardWidth(entry.contentRect.width));
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [state === null]);
 
   useEffect(() => {
     let frame = 0,
@@ -100,7 +111,7 @@ export default function MosaicPrototype() {
   const ordered = groups.flatMap((g) => g.rows);
   const widths = mosaic(
     ordered.map((t) => t.electorate),
-    WIDTH - REGION_GAP * (groups.length - 1),
+    Math.max(0, boardWidth - REGION_GAP * (groups.length - 1)),
     GAP,
     MIN,
   );
@@ -133,7 +144,7 @@ export default function MosaicPrototype() {
         <button onClick={() => control.current.restart()}>Recomeçar</button>
       </header>
 
-      <section className="mos-board" aria-label="Apuração por UF">
+      <section className="mos-board" aria-label="Apuração por UF" ref={board}>
         {groups.map((g) => {
           const m = marginPoints({
             valid: sum(g.rows, 'valid'),
@@ -159,7 +170,7 @@ export default function MosaicPrototype() {
                       {/* Number scales with the column so narrow states never overlap. */}
                       <span
                         className={`margin ${side(mu)}`}
-                        style={{ fontSize: `${Math.max(11, Math.min(22, w * 0.36))}px` }}
+                        style={{ fontSize: `${Math.max(9, Math.min(18, w * 0.34))}px` }}
                       >
                         {mu === null ? '' : pp(mu)}
                       </span>
@@ -181,10 +192,9 @@ export default function MosaicPrototype() {
         })}
       </section>
       <p className="mos-legend">
-        <i className="key flavio" /> <i className="key lula" /> votos · <i className="key others" />{' '}
-        demais (só 1º turno) · <i className="key notValid" /> brancos e nulos ·{' '}
-        <i className="key absent" /> ausentes · vazio: ainda não apurado · área: eleitores aptos ·
-        número: vantagem do líder (p.p. dos válidos)
+        <i className="key flavio" /> <i className="key lula" /> votos de cada um · vazio: restante
+        dos eleitores aptos (demais, brancos, nulos, ausentes, não apurado) · área: eleitores aptos
+        · número: vantagem do líder (p.p. dos válidos)
       </p>
     </div>
   );
