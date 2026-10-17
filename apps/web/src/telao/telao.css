@@ -372,11 +372,15 @@
 .t-mosaic .margin {
   min-height: 18px;
 }
+/* Every UF code rotated 90°, same height for all: bars stay aligned. */
 .t-mosaic .uf {
   flex: none;
-  height: 18px;
-  margin-top: 2px;
+  height: 22px;
+  margin-top: 3px;
+  writing-mode: vertical-rl;
+  align-self: center;
   font-size: 10px;
+  line-height: 1;
   overflow: visible;
 }
 .t-mosaic .mos-legend {
@@ -530,10 +534,3 @@
 }
 
 /* Narrow states (a few px): the UF code stands vertically instead of overflowing. */
-.t-mosaic .uf.narrow {
-  writing-mode: vertical-rl;
-  text-orientation: upright;
-  letter-spacing: -2px;
-  font-size: 8px;
-  line-height: 1;
-}

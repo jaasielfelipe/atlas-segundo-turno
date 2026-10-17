@@ -116,7 +116,7 @@ export default function Telao() {
               flavio: c.flavio,
               lula: c.lula,
               valid: c.valid,
-              swing: c.swing,
+              gain: c.gain,
             } satisfies TickerItem;
           }}
         />
@@ -445,9 +445,7 @@ function MosaicPanel({ engine }: { engine: TelaoEngine }) {
                           style={{ height: `${(o.flavio / o.electorate) * 100}%` }}
                         />
                       </div>
-                      <span className={w < 16 ? 'uf narrow' : 'uf'}>
-                        {uf === 'zz' ? 'EX' : uf.toUpperCase()}
-                      </span>
+                      <span className="uf">{uf === 'zz' ? 'EX' : uf.toUpperCase()}</span>
                     </div>
                   );
                 })}

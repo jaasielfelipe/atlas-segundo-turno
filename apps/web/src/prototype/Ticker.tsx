@@ -9,7 +9,8 @@ export type TickerItem = {
   lula: number;
   valid: number;
   /** (Flávio − Lula) / válidos now minus the same in the 1st round, in p.p.; null if unknown. */
-  swing: number | null;
+  /** Who gained more share of the valid votes vs the 1st round, and by how much (p.p.). */
+  gain: { who: 'f' | 'l' | 't'; points: number } | null;
 };
 
 const pct = (v: number) =>
@@ -102,22 +103,24 @@ export default function Ticker({
       <div className="ticker-view" ref={viewport}>
         <ol ref={track}>
           {items.map((t) => {
-            const lead = t.flavio > t.lula ? 'f' : t.flavio < t.lula ? 'l' : 't';
-            const toward = t.swing === null ? null : t.swing > 0 ? 'f' : t.swing < 0 ? 'l' : 't';
+            // Two lines: the city (white), then the split and the larger gain vs the 1st round.
             return (
               <li key={t.id}>
-                <span className={`name ${lead}`}>
+                <span className="name">
                   {t.name} <small>{t.uf}</small>
                 </span>
-                <span className="f">{t.valid ? pct(t.flavio / t.valid) : '—'}</span>
-                <span className="l">{t.valid ? pct(t.lula / t.valid) : '—'}</span>
-                {/* Margin change vs the 1st round, said in place (colour: who gained margin). */}
-                {t.swing !== null && (
-                  <span className={`swing ${toward ?? ''}`}>
-                    {toward === 't' ? '±0' : `▲ ${pp(t.swing)}`}
-                    <small> vs 1º turno</small>
-                  </span>
-                )}
+                <span className="line">
+                  <span className="f">{t.valid ? pct(t.flavio / t.valid) : '—'}</span>
+                  <span className="vs">vs</span>
+                  <span className="l">{t.valid ? pct(t.lula / t.valid) : '—'}</span>
+                  {t.gain && (
+                    // ΔT1: change vs the 1st round (T1) of whoever gained more share, in p.p.
+                    <span className={`gain ${t.gain.who}`}>
+                      <small>ΔT1</small> {t.gain.points >= 0 ? '+' : '−'}
+                      {pp(t.gain.points)}
+                    </span>
+                  )}
+                </span>
               </li>
             );
           })}

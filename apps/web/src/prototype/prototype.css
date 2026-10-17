@@ -242,44 +242,55 @@ body,
 }
 .ticker-view li {
   display: flex;
-  align-items: baseline;
-  gap: 12px;
-  padding: 0 34px 0 0;
-  font-size: 22px;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  padding: 0 28px;
+  border-right: 1px solid #262d36;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
-.ticker-view li::after {
-  content: '';
-  width: 5px;
-  height: 5px;
-  margin-left: 22px;
-  border-radius: 50%;
-  background: #3a414b;
-  align-self: center;
-}
+/* Line 1: the city, in white. */
 .ticker-view .name {
+  font-size: 21px;
   font-weight: 650;
+  color: var(--text);
+  line-height: 1.1;
 }
 .ticker-view .name small {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 400;
   color: var(--muted);
 }
+/* Line 2: split of the valid votes, then who gained more vs the 1st round. */
+.ticker-view .line {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 17px;
+  line-height: 1.1;
+}
+.ticker-view .vs {
+  font-size: 12px;
+  color: var(--muted);
+}
 .ticker-view .f,
-.ticker-view .swing.f {
+.ticker-view .gain.f {
   color: var(--flavio);
 }
 .ticker-view .l,
-.ticker-view .swing.l {
+.ticker-view .gain.l {
   color: var(--lula);
 }
-.ticker-view .swing {
-  font-size: 17px;
+.ticker-view .gain {
+  margin-left: 12px;
+  font-weight: 600;
   color: var(--muted);
 }
-.ticker-view .swing small {
-  font-size: 13px;
-  opacity: 0.75;
+.ticker-view .gain small {
+  font-size: 12px;
+  font-weight: 400;
+  opacity: 0.8;
 }
 .proto-error {
   position: absolute;

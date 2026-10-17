@@ -251,7 +251,10 @@ export default function MapPrototype() {
             id: id++,
             uf: ufs[card.municipality],
             name: names[card.municipality],
-            swing: syntheticSwing(file.municipalities[card.municipality][0]),
+            gain: (() => {
+              const s = syntheticSwing(file.municipalities[card.municipality][0]);
+              return { who: s > 0 ? 'f' : s < 0 ? 'l' : 't', points: Math.abs(s) } as const;
+            })(),
           };
         };
         const tick = (now: number) => {

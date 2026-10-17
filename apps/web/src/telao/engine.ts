@@ -13,7 +13,27 @@ import { electorateByUf, ufTotals } from '../prototype/mosaic';
 
 export type { Official };
 export type Mode = 'live' | 'demo';
-export type Closed = Arrival & Pair & { valid: number; swing: number | null };
+/**
+ * Who gained more share of the valid votes from the 1st to the 2nd round in a municipality, and
+ * by how much (p.p.). Not the margin: the leader can keep leading while the other gains more.
+ */
+export type Gain = { who: 'f' | 'l' | 't'; points: number };
+export type Closed = Arrival & Pair & { valid: number; gain: Gain | null };
+
+/** Larger share gain (p.p. of valid) between the finalists, 1st → 2nd round. */
+export function largestGain(
+  now: Pair & { valid: number },
+  first: Pair & { valid: number },
+): Gain | null {
+  if (now.valid <= 0 || first.valid <= 0) return null;
+  const f = (now.flavio / now.valid - first.flavio / first.valid) * 100,
+    l = (now.lula / now.valid - first.lula / first.valid) * 100;
+  return f > l
+    ? { who: 'f', points: f }
+    : l > f
+      ? { who: 'l', points: l }
+      : { who: 't', points: f };
+}
 type Bootstrap = {
   version: string;
   base: string;
@@ -91,18 +111,15 @@ export class TelaoEngine {
     for (const a of arrivals) {
       if (!a.closes) continue;
       const m = this.replay.municipalities[a.municipality];
-      // Margin change (p.p. of valid) vs the 1st round in the same municipality, all closed.
+      // Who gained more share vs the 1st round in the same municipality (all segments closed).
       const first = this.firstRound?.[a.municipality];
-      const swing =
-        first && first.valid > 0 && m.valid > 0
-          ? ((m.flavio - m.lula) / m.valid - (first.flavio - first.lula) / first.valid) * 100
-          : null;
+      const gain = first ? largestGain(m, first) : null;
       this.closed.push(this.file.municipalities[a.municipality][0], {
         ...a,
         flavio: m.flavio,
         lula: m.lula,
         valid: m.valid,
-        swing,
+        gain,
       });
     }
     for (const l of this.arrivalListeners) l(arrivals);

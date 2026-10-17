@@ -103,3 +103,5 @@ Append-only. Separar sempre: sintético (fixture), simulado TSE, oficial TSE.
 - **Faixa sem saltos:** ao sair o primeiro item, a posição era corrigida num quadro diferente daquele em que o React removia o item (salto de uma largura de item). Agora a correção roda num efeito de layout, no mesmo quadro, antes da pintura. Medido: 600 quadros, 6 saídas, 0 recuos (antes: 30 recuos de até 457 px). O delta passa a ser dito no item: “▲ 0,7 vs 1º turno”.
 - **Mosaico:** siglas com altura fixa (as verticais encurtavam as barras); medido: todas as barras com 213 px. Legenda removida.
 - **Pista:** legenda dos fantasmas acima da pista.
+- **Faixa em duas linhas:** cidade em branco; abaixo, “FF% vs LL%” e **ΔT1 +XX** — o maior ganho de participação nos válidos do 1º para o 2º turno entre os dois finalistas, na cor de quem ganhou mais (independe de quem lidera; teste: Flávio lidera 45→52 e Lula ganha mais 40→48 → ΔT1 vermelho +8).
+- **Mosaico:** todas as siglas giradas 90°, mesma altura; barras iguais (208 px medidos).
