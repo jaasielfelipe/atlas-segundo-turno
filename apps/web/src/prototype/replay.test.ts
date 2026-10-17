@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { height, margin, ReplayState, type ReplayFile } from './replay';
+import { finalVotes, height, margin, ReplayState, synthetic2T, type ReplayFile } from './replay';
 
 // Synthetic: municipality 0 has two segments (zones 0001 and 0002), municipality 1 has one.
 const file: ReplayFile = {
@@ -81,4 +81,38 @@ it('soma nacional acompanha versões substituídas e volta a zero ao rebobinar',
   });
   r.advanceTo(0);
   expect(r.national.totalized).toBe(0);
+});
+
+it('fantasma: 1º turno nas mesmas unidades — só encerradas ou proporcional às seções', () => {
+  const baseline = [
+    { flavio: 100, lula: 50 },
+    { flavio: 10, lula: 40 },
+    { flavio: 20, lula: 20 },
+  ];
+  const r = new ReplayState(file, baseline);
+  r.advanceTo(120); // segment 0: 4/10 sections; segment 1: 5/5 (complete)
+  expect(r.national.ghost.complete).toEqual({ flavio: 10, lula: 40 });
+  expect(r.national.ghost.proportional.flavio).toBeCloseTo(100 * 0.4 + 10);
+  // Exchange: open segment 0 as counted (60), closed segment 1 swapped for its 1st round (10).
+  expect(r.national.ghost.exchange).toEqual({ flavio: 60 + 10, lula: 30 + 40 });
+  r.advanceTo(240); // everything complete: both modes equal the whole baseline
+  expect(r.national.ghost.complete).toEqual({ flavio: 130, lula: 110 });
+  expect(r.national.ghost.exchange).toEqual({ flavio: 130, lula: 110 });
+  expect(r.national.ghost.proportional.flavio).toBeCloseTo(130);
+  r.advanceTo(0);
+  expect(r.national.ghost.complete).toEqual({ flavio: 0, lula: 0 });
+});
+
+it('2º turno sintético: só redistribui os demais entre os finalistas; válidos intactos', () => {
+  const real: ReplayFile = {
+    ...file,
+    events: [[60, 0, 4, 100, 60, 30, 0, 0, 0]],
+  };
+  const fake = synthetic2T(real);
+  const [, , , valid, f, l] = fake.events[0];
+  expect(valid).toBe(100);
+  expect(f! + l!).toBe(100);
+  expect(f!).toBeGreaterThanOrEqual(60 + 3);
+  expect(fake.label).toMatch(/SINTÉTICO/);
+  expect(finalVotes(real)[0]).toEqual({ flavio: 60, lula: 30 });
 });

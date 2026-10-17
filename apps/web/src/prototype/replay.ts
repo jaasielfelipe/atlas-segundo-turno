@@ -32,7 +32,16 @@ export type NationalState = {
   valid: number;
   flavio: number;
   lula: number;
+  /**
+   * Where each finalist would be with the 1st-round votes of the same units (only with a
+   * baseline): `complete` counts município–zona segments fully counted now; `proportional`
+   * also counts partial segments in proportion to the sections counted (an estimate);
+   * `exchange` is the current count with every fully counted segment replaced by its 1st-round
+   * votes — exact, and its gap to the runner is the change on closed units only.
+   */
+  ghost: { complete: Pair; proportional: Pair; exchange: Pair };
 };
+export type Pair = { flavio: number; lula: number };
 
 export type MunicipalityState = {
   sections: number;
@@ -40,6 +49,10 @@ export type MunicipalityState = {
   valid: number;
   flavio: number;
   lula: number;
+  /** Electorate of the counted sections, turnout and turnout − valid (absent, blank/null). */
+  countedElectorate: number;
+  turnout: number;
+  notValid: number;
   /** none: no section counted; counting: some; closed: every segment fully counted. */
   status: 'none' | 'counting' | 'closed';
 };
@@ -80,7 +93,11 @@ export class ReplayState {
   private readonly sectionCount: number[];
   private cursor = 0;
   time = -Infinity;
-  constructor(readonly file: ReplayFile) {
+  /** `baseline`: 1st-round final votes of each segment (same order as `file.segments`). */
+  constructor(
+    readonly file: ReplayFile,
+    readonly baseline?: Pair[],
+  ) {
     this.segmentCount = file.municipalities.map(() => 0);
     this.sectionCount = file.municipalities.map(() => 0);
     for (const [m, , sections] of file.segments) {
@@ -99,6 +116,11 @@ export class ReplayState {
       valid: 0,
       flavio: 0,
       lula: 0,
+      ghost: {
+        complete: { flavio: 0, lula: 0 },
+        proportional: { flavio: 0, lula: 0 },
+        exchange: { flavio: 0, lula: 0 },
+      },
     };
     this.closedSegments = [];
     this.reset();
@@ -114,6 +136,9 @@ export class ReplayState {
         valid: 0,
         flavio: 0,
         lula: 0,
+        countedElectorate: 0,
+        turnout: 0,
+        notValid: 0,
         status: 'none',
       }),
     );
@@ -138,6 +163,11 @@ export class ReplayState {
         valid: 0,
         flavio: 0,
         lula: 0,
+        ghost: {
+          complete: { flavio: 0, lula: 0 },
+          proportional: { flavio: 0, lula: 0 },
+          exchange: { flavio: 0, lula: 0 },
+        },
       });
     this.closedSegments.length = 0;
     this.file.municipalities.forEach(() => this.closedSegments.push(0));
@@ -174,6 +204,22 @@ export class ReplayState {
       mun.valid += after.valid - before.valid;
       mun.flavio += after.flavio - before.flavio;
       mun.lula += after.lula - before.lula;
+      mun.countedElectorate += after.est - before.est;
+      mun.turnout += after.turnout - before.turnout;
+      mun.notValid += after.notValid - before.notValid;
+      if (this.baseline) {
+        const b = this.baseline[s],
+          g = nat.ghost;
+        const whole = (x: { totalized: number }) => (x.totalized === sections ? 1 : 0);
+        const part = (x: { totalized: number }) => (sections ? x.totalized / sections : 0);
+        g.complete.flavio += b.flavio * (whole(after) - whole(before));
+        g.complete.lula += b.lula * (whole(after) - whole(before));
+        g.proportional.flavio += b.flavio * (part(after) - part(before));
+        g.proportional.lula += b.lula * (part(after) - part(before));
+        const swap = (x: { totalized: number; flavio: number; lula: number }) => (whole(x) ? b : x);
+        g.exchange.flavio += swap(after).flavio - swap(before).flavio;
+        g.exchange.lula += swap(after).lula - swap(before).lula;
+      }
       this.closedSegments[m] +=
         Number(after.totalized === sections) - Number(before.totalized === sections);
       this.latest[s] = after;
@@ -228,4 +274,44 @@ export function height(m: MunicipalityState, mode: HeightMode) {
   if (mode === 'votes') return Math.sqrt(g.votes) * 900;
   if (mode === 'points') return g.points * 2500;
   return g.points * g.counted * 2500;
+}
+
+/** Final votes of each segment in a replay (its last version): the 1st-round baseline. */
+export function finalVotes(file: ReplayFile): Pair[] {
+  const out: Pair[] = file.segments.map(() => ({ flavio: 0, lula: 0 }));
+  for (const e of file.events) out[e[1]] = { flavio: e[4] ?? 0, lula: e[5] ?? 0 };
+  return out;
+}
+
+/**
+ * SYNTHETIC 2nd round for visual tests only: the real 1st-round timing and turnout, with every
+ * other candidate's valid votes split between the finalists by a fixed per-municipality share
+ * (deterministic, 30–70%). Not a model of anything; always labelled as synthetic on screen.
+ */
+export function synthetic2T(file: ReplayFile): ReplayFile {
+  const share = file.municipalities.map(([id]) => {
+    let h = 0x811c9dc5;
+    for (let i = 0; i < id.length; i++) h = Math.imul(h ^ id.charCodeAt(i), 0x01000193);
+    return 0.3 + (((h >>> 0) % 1000) / 1000) * 0.4;
+  });
+  return {
+    ...file,
+    label: '2º turno SINTÉTICO derivado do replay do 1º turno — apenas para teste visual',
+    events: file.events.map((e) => {
+      const [at, s, totalized, valid, flavio, lula, ...rest] = e;
+      if (valid === null || flavio === null || lula === null) return e;
+      const others = valid - flavio - lula,
+        a = share[file.segments[s][0]];
+      const toFlavio = Math.round(others * a);
+      return [
+        at,
+        s,
+        totalized,
+        valid,
+        flavio + toFlavio,
+        lula + others - toFlavio,
+        ...rest,
+      ] as ReplayFile['events'][number];
+    }),
+  };
 }

@@ -1,5 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ReplayState, type NationalState, type ReplayFile } from './replay';
+import {
+  finalVotes,
+  ReplayState,
+  synthetic2T,
+  type NationalState,
+  type Pair,
+  type ReplayFile,
+} from './replay';
 import { along, makeTrack, path, point, tick, type Track } from './track';
 import './race.css';
 
@@ -8,8 +15,7 @@ const SPEEDS = [30, 60, 120, 300];
 const TRACK_SHARE = 0.55;
 /** Highlighted increment: votes gained in the last 5 minutes of counting. */
 const INCREMENT_SECONDS = 300;
-/** Tug-of-war scale: two-way share from 50% ± 15 p.p. */
-const ROPE_RANGE = 0.15;
+type GhostMode = 'exchange' | 'complete' | 'proportional';
 
 const int = (v: number) => new Intl.NumberFormat('pt-BR').format(Math.round(v));
 const mi = (v: number) =>
@@ -32,23 +38,26 @@ type View = {
   flavio: number;
   lula: number;
   target: number;
+  /** Eased 1st-round position of each finalist on the same units (ghost). */
+  ghost: Pair;
   /** Votes 5 minutes earlier (increment start). */
-  before: { flavio: number; lula: number };
-  /** Two-way share of Flávio sampled once per counting minute (tug-of-war trail). */
-  trail: number[];
+  before: Pair;
 };
 
 /**
- * Race experiments on the real 1st-round replay (Flávio × Lula, other candidates exist): a
- * longer serpentine, the same track through a race camera that follows the leaders, and a
- * tug-of-war of the two-way share. Same clock for all three.
+ * Race prototype: a race camera that follows the leader (main piece) and the whole track beside
+ * it, both with a ghost per lane — where the same candidate would be with the 1st-round votes of
+ * the same município–zona units counted so far (not chronological). The 2nd round here is
+ * SYNTHETIC (derived from the real 1st-round replay); the ghosts are the real 1st round.
  */
 export default function RacePrototype() {
   const [view, setView] = useState<View | null>(null);
   const [speed, setSpeed] = useState(120);
+  const [mode, setMode] = useState<GhostMode>('exchange');
   const [error, setError] = useState('');
-  const control = useRef({ speed, restart: () => {} });
+  const control = useRef({ speed, mode, restart: () => {} });
   control.current.speed = speed;
+  control.current.mode = mode;
 
   useEffect(() => {
     let frame = 0,
@@ -57,20 +66,18 @@ export default function RacePrototype() {
       .then((r) => r.json() as Promise<ReplayFile>)
       .then((file) => {
         if (disposed) return;
-        const replay = new ReplayState(file);
+        const replay = new ReplayState(synthetic2T(file), finalVotes(file));
         const start = replay.firstCount() - 60,
           end = replay.lastEvent();
         let simulated = start,
-          last = performance.now(),
-          shown = { flavio: 0, lula: 0, target: 0 };
+          last = performance.now();
+        let shown = { flavio: 0, lula: 0, target: 0, ghost: { flavio: 0, lula: 0 } };
         let history: { at: number; flavio: number; lula: number }[] = [];
-        let trail: number[] = [];
         control.current.restart = () => {
           simulated = start;
           replay.reset();
-          shown = { flavio: 0, lula: 0, target: 0 };
+          shown = { flavio: 0, lula: 0, target: 0, ghost: { flavio: 0, lula: 0 } };
           history = [];
-          trail = [];
         };
         const step = (now: number) => {
           if (disposed) return;
@@ -83,26 +90,29 @@ export default function RacePrototype() {
           // Half of the valid votes still possible: registered − abstentions − non-valid so far.
           const abstentions = nat.countedElectorate - nat.turnout;
           const target = Math.max(0, (nat.electorate - abstentions - nat.notValid) / 2);
+          const ghost = nat.ghost[control.current.mode];
           // Ease toward the counted values (the live telão receives steps every few seconds).
           const k = 1 - Math.exp(-dt / 350);
+          const ease = (a: number, b: number) => a + (b - a) * k;
           shown = {
-            flavio: shown.flavio + (nat.flavio - shown.flavio) * k,
-            lula: shown.lula + (nat.lula - shown.lula) * k,
-            target: shown.target ? shown.target + (target - shown.target) * k : target,
+            flavio: ease(shown.flavio, nat.flavio),
+            lula: ease(shown.lula, nat.lula),
+            target: shown.target ? ease(shown.target, target) : target,
+            ghost: {
+              flavio: ease(shown.ghost.flavio, ghost.flavio),
+              lula: ease(shown.ghost.lula, ghost.lula),
+            },
           };
           if (!history.length || simulated - history.at(-1)!.at >= 30) {
             history.push({ at: simulated, flavio: nat.flavio, lula: nat.lula });
             while (history.length > 2 && history[1].at < simulated - INCREMENT_SECONDS)
               history.shift();
-            if (nat.flavio + nat.lula > 0 && history.length % 2 === 0)
-              trail = [...trail, nat.flavio / (nat.flavio + nat.lula)].slice(-40);
           }
           setView({
             at: new Date(Date.parse(file.base) + simulated * 1000).toISOString(),
-            nat: { ...nat },
+            nat: { ...nat, ghost: { ...nat.ghost } },
             ...shown,
             before: history[0] ?? { flavio: 0, lula: 0 },
-            trail,
           });
           frame = requestAnimationFrame(step);
         };
@@ -115,28 +125,42 @@ export default function RacePrototype() {
     };
   }, []);
 
+  // Camera track: long straights seen up close. Whole-track panel: its own, taller geometry.
   const long = useMemo(() => makeTrack({ n: 8, width: 1880, radius: 28 }), []);
+  const whole = useMemo(() => makeTrack({ n: 10, width: 640, radius: 22, top: 40, side: 16 }), []);
 
   if (error) return <p className="race-error">{error}</p>;
   if (!view) return <p className="race-error">Carregando replay…</p>;
   const nat = view.nat;
   const total = nat.electorate * TRACK_SHARE;
+  const valid = nat.flavio + nat.lula;
+  const gap = (now: number, then: number) =>
+    then > 0 ? `${now >= then ? '+' : '−'}${mi(Math.abs(now - then))}` : '—';
   return (
-    <div className="race">
+    <div className="race race2">
       <header className="race-top">
         <div>
           <h1>Protótipo · corrida</h1>
           <p>
-            <strong>Replay real do 1º turno</strong> (Flávio × Lula entre 12 candidaturas; no 2º
-            turno só os dois). Três experimentos no mesmo relógio.
+            <strong className="synthetic">2º turno SINTÉTICO</strong> derivado do replay real do 1º
+            turno (só para teste visual) · fantasmas: <strong>1º turno real</strong> nas mesmas
+            zonas
           </p>
         </div>
         <div className="race-hud">
           <span>{clock(view.at)}</span>
           <span>{pct(nat.totalized / nat.sections)} das seções</span>
-          <span className="f">{int(nat.flavio)}</span>
-          <span className="l">{int(nat.lula)}</span>
+          <span className="f">{valid ? pct(nat.flavio / valid) : '—'}</span>
+          <span className="l">{valid ? pct(nat.lula / valid) : '—'}</span>
         </div>
+        <label>
+          Fantasma{' '}
+          <select value={mode} onChange={(e) => setMode(e.target.value as GhostMode)}>
+            <option value="exchange">zonas encerradas trocadas pelo 1º turno (exato)</option>
+            <option value="complete">só zonas encerradas</option>
+            <option value="proportional">proporcional às seções (estimativa)</option>
+          </select>
+        </label>
         <label>
           Velocidade{' '}
           <select value={speed} onChange={(e) => setSpeed(Number(e.target.value))}>
@@ -150,33 +174,43 @@ export default function RacePrototype() {
         <button onClick={() => control.current.restart()}>Recomeçar</button>
       </header>
 
-      <section className="race-a">
-        <h2>
-          A · serpentina longa <small>8 retas, ~2,7× a pista do 1º turno · 0 a 55% dos aptos</small>
-        </h2>
-        <Serpentine track={long} view={view} total={total} fixed={nat.electorate / 2} />
-      </section>
-
-      <section className="race-b">
-        <h2>
-          B · câmera de corrida{' '}
-          <small>mesma pista, 3× mais perto, seguindo o líder; o outro na borda</small>
-        </h2>
+      <section className="race-camera">
         <Serpentine
           track={long}
           view={view}
           total={total}
           fixed={nat.electorate / 2}
-          camera={{ zoom: 3, aspect: 940 / 400 }}
+          camera={{ zoom: 4, aspect: 1240 / 880 }}
         />
       </section>
 
-      <section className="race-c">
-        <h2>
-          C · cabo de guerra <small>divisão dos votos entre os dois · 50% ± 15 p.p.</small>
-        </h2>
-        <Rope view={view} />
-      </section>
+      <aside className="race-whole">
+        <h2>Pista inteira</h2>
+        <Serpentine track={whole} view={view} total={total} fixed={nat.electorate / 2} compact />
+        <dl className="race-ghost">
+          <div>
+            <dt>
+              <i className="ring f" /> vs 1º turno nas mesmas zonas
+            </dt>
+            <dd className="f">{gap(nat.flavio, nat.ghost[mode].flavio)}</dd>
+          </div>
+          <div>
+            <dt>
+              <i className="ring l" /> vs 1º turno nas mesmas zonas
+            </dt>
+            <dd className="l">{gap(nat.lula, nat.ghost[mode].lula)}</dd>
+          </div>
+        </dl>
+        <p className="race-note">
+          Anel: onde o mesmo candidato estaria com os votos do 1º turno nas zonas já apuradas (
+          {mode === 'exchange'
+            ? 'apuração atual com as município–zonas já encerradas trocadas pelo seu resultado no 1º turno; a distância ao corredor é a diferença exata nessas zonas'
+            : mode === 'complete'
+              ? 'só município–zonas encerradas'
+              : 'zonas parciais na proporção das seções apuradas — estimativa'}
+          ). Não é cronológico.
+        </p>
+      </aside>
     </div>
   );
 }
@@ -187,75 +221,100 @@ function Serpentine({
   total,
   fixed,
   camera,
+  compact = false,
 }: {
   track: Track;
   view: View;
   total: number;
   fixed: number;
   camera?: { zoom: number; aspect: number };
+  /** Whole-track panel: thinner marks, fewer labels. */
+  compact?: boolean;
 }) {
+  const lane = compact ? 4 : 7;
   const statics = useMemo(() => {
     const ticks: { key: number; line: ReturnType<typeof tick>; major: boolean }[] = [];
     const labels: { key: number; x: number; y: number }[] = [];
+    const every = compact ? 10e6 : 5e6;
     if (total > 0)
       for (let v = 1e6; v < total; v += 1e6) {
         const u = along(track, v, total),
-          major = v % 5e6 === 0;
-        ticks.push({ key: v, major, line: tick(track, u, major ? -16 : -16, major ? 16 : -11) });
+          major = v % every === 0;
+        if (compact && !major) continue;
+        ticks.push({ key: v, major, line: tick(track, u, -16, major ? 16 : -11) });
         const p = point(track, u, 0);
-        if (major && p.straight) labels.push({ key: v, x: p.x, y: p.y - 20 });
+        if (major && p.straight) labels.push({ key: v, x: p.x, y: p.y - (compact ? 14 : 20) });
       }
-    return {
-      ticks,
-      labels,
-      asphalt: total > 0 ? path(track, 0, total, 0, total, 6) : '',
-    };
-  }, [track, total]);
+    return { ticks, labels, asphalt: total > 0 ? path(track, 0, total, 0, total, 6) : '' };
+  }, [track, total, compact]);
   if (total <= 0) return null;
   const runners = [
-    { key: 'f', votes: view.flavio, before: view.before.flavio, lane: -7 },
-    { key: 'l', votes: view.lula, before: view.before.lula, lane: 7 },
+    {
+      key: 'f',
+      votes: view.flavio,
+      before: view.before.flavio,
+      ghost: view.ghost.flavio,
+      lane: -lane,
+    },
+    { key: 'l', votes: view.lula, before: view.before.lula, ghost: view.ghost.lula, lane },
   ];
   let viewBox = `0 0 ${track.width} ${track.height}`;
-  let frameRect: { x: number; y: number; w: number; h: number } | null = null;
-  // Off-frame runner (camera only): a marker on the frame edge with the gap in votes.
-  let behind: { x: number; y: number; key: string; gap: number } | null = null;
+  // Camera only: markers on the frame edge for what is outside it (the other runner with the
+  // gap in votes; ghosts as dashed rings).
+  const edge: { x: number; y: number; key: string; label: string; ghost: boolean }[] = [];
   if (camera) {
-    // Follow the leader closely; the other runner may be far behind on the same straight.
+    // Follow the leader closely, keeping its own ghost in frame while the gap fits.
     const leader = runners[0].votes >= runners[1].votes ? runners[0] : runners[1],
       other = leader === runners[0] ? runners[1] : runners[0];
     const w = track.width / camera.zoom,
       h = w / camera.aspect;
-    const c = point(track, Math.max(0, along(track, leader.votes, total) - w * 0.1), leader.lane);
+    const u = along(track, leader.votes, total),
+      back = Math.min(Math.max(0, u - along(track, leader.ghost, total)), w * 0.7);
+    const c = point(track, Math.max(0, u - back / 2 - w * 0.05), leader.lane);
     const x = Math.max(0, Math.min(track.width - w, c.x - w / 2)),
-      y = Math.max(0, Math.min(Math.max(0, track.height - h), c.y - h / 2));
+      y = Math.max(-h / 4, Math.min(Math.max(0, track.height - h * 0.75), c.y - h / 2));
     viewBox = `${x.toFixed(1)} ${y.toFixed(1)} ${w.toFixed(1)} ${h.toFixed(1)}`;
-    frameRect = { x, y, w, h };
-    const o = point(track, along(track, other.votes, total), other.lane);
     const m = 26;
-    if (o.x < x || o.x > x + w || o.y < y || o.y > y + h)
-      behind = {
-        x: Math.max(x + m, Math.min(x + w - m, o.x)),
-        y: Math.max(y + m, Math.min(y + h - m, o.y)),
-        key: other.key,
-        gap: leader.votes - other.votes,
-      };
+    const outside = (votes: number, lane: number, key: string, label: string, ghost: boolean) => {
+      const o = point(track, along(track, votes, total), lane);
+      if (votes > 0 && (o.x < x || o.x > x + w || o.y < y || o.y > y + h))
+        edge.push({
+          x: Math.max(x + m, Math.min(x + w - m, o.x)),
+          y: Math.max(y + m, Math.min(y + h - m, o.y)),
+          key,
+          label,
+          ghost,
+        });
+    };
+    outside(other.votes, other.lane, other.key, `−${mi(leader.votes - other.votes)}`, false);
+    for (const r of runners) outside(r.ghost, r.lane, r.key, '1º', true);
+    // Markers clamped to the same edge spot are stacked instead of overlapping.
+    edge.forEach((e, i) => {
+      for (const f of edge.slice(0, i))
+        if (Math.hypot(e.x - f.x, e.y - f.y) < 40) e.y = Math.min(y + h - 26, f.y + 44);
+    });
   }
   const targetU = along(track, view.target, total),
     fixedU = along(track, fixed, total);
-  const svg = (box: string, mini = false) => (
-    <svg viewBox={box} className={mini ? 'serp mini' : 'serp'} preserveAspectRatio="xMidYMid meet">
+  const at = (u: number, dy: number) => {
+    const p = point(track, u, 0);
+    return { x: p.x, y: p.y + dy };
+  };
+  return (
+    <svg
+      viewBox={viewBox}
+      className={compact ? 'serp compact' : 'serp'}
+      preserveAspectRatio="xMidYMid meet"
+    >
       <path d={statics.asphalt} className="serp-asphalt" />
-      {!mini &&
-        statics.ticks.map((t) => (
-          <line key={t.key} {...t.line} className={t.major ? 'serp-tick major' : 'serp-tick'} />
-        ))}
-      {!mini &&
-        statics.labels.map((l) => (
-          <text key={l.key} x={l.x} y={l.y} className="serp-scale" textAnchor="middle">
-            {mi(l.key)}
-          </text>
-        ))}
+      {statics.ticks.map((t) => (
+        <line key={t.key} {...t.line} className={t.major ? 'serp-tick major' : 'serp-tick'} />
+      ))}
+      {statics.labels.map((l) => (
+        <text key={l.key} x={l.x} y={l.y} className="serp-scale" textAnchor="middle">
+          {mi(l.key)}
+        </text>
+      ))}
       {runners.map((r) => (
         <g key={r.key} className={r.key}>
           {r.before > 0 && (
@@ -268,24 +327,31 @@ function Serpentine({
       ))}
       <line {...tick(track, fixedU, -20, 20)} className="serp-fixed" />
       <line {...tick(track, targetU, -20, 20)} className="serp-target" />
-      {!mini && (
+      {!compact && (
         <>
-          <text
-            {...(({ x, y }) => ({ x, y: y - 26 }))(point(track, fixedU, 0))}
-            className="serp-finish"
-            textAnchor="middle"
-          >
+          <text {...at(fixedU, -26)} className="serp-finish" textAnchor="middle">
             50% dos aptos
           </text>
-          <text
-            {...(({ x, y }) => ({ x, y: y + 36 }))(point(track, targetU, 0))}
-            className="serp-finish target"
-            textAnchor="middle"
-          >
+          <text {...at(targetU, 36)} className="serp-finish target" textAnchor="middle">
             meta ajustada
           </text>
         </>
       )}
+      {/* Ghosts: same lane, 1st-round votes of the same units. */}
+      {runners.map((r) => {
+        if (r.ghost <= 0) return null;
+        const p = point(track, along(track, r.ghost, total), r.lane);
+        return (
+          <g key={`g${r.key}`} className={`serp-ghost ${r.key}`}>
+            <circle cx={p.x} cy={p.y} r={compact ? 6 : 10} />
+            {!compact && (
+              <text x={p.x} y={p.y + (r.lane < 0 ? -16 : 26)} textAnchor="middle">
+                1º turno
+              </text>
+            )}
+          </g>
+        );
+      })}
       {runners.map((r) => {
         const p = point(track, along(track, r.votes, total), r.lane);
         return (
@@ -293,94 +359,24 @@ function Serpentine({
             key={r.key}
             cx={p.x}
             cy={p.y}
-            r={mini ? 12 : 7}
+            r={compact ? 5 : 8}
             className={`serp-head ${r.key}`}
           />
         );
       })}
-      {!mini && behind && (
-        <g className={`serp-behind ${behind.key}`}>
-          <circle cx={behind.x} cy={behind.y} r={9} />
-          <text x={behind.x} y={behind.y - 16} textAnchor="middle">
-            −{mi(behind.gap)}
-          </text>
-        </g>
-      )}
-      {mini && frameRect && (
-        <rect
-          {...{ ...frameRect, width: frameRect.w, height: frameRect.h }}
-          className="serp-frame"
-        />
-      )}
-    </svg>
-  );
-  return (
-    <div className="serp-wrap">
-      {svg(viewBox)}
-      {camera && (
-        <div className="serp-minimap">{svg(`0 0 ${track.width} ${track.height}`, true)}</div>
-      )}
-    </div>
-  );
-}
-
-function Rope({ view }: { view: View }) {
-  const W = 940,
-    H = 400,
-    cx = W / 2,
-    half = 400,
-    y = 190;
-  const sum = view.flavio + view.lula;
-  const share = sum > 0 ? view.flavio / sum : 0.5;
-  // Flávio pulls left, Lula right (same order as the ticker).
-  const x = (s: number) =>
-    cx - (Math.max(-ROPE_RANGE, Math.min(ROPE_RANGE, s - 0.5)) / ROPE_RANGE) * half;
-  const knot = x(share);
-  const lead = share > 0.5 ? 'f' : share < 0.5 ? 'l' : 't';
-  return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="rope" role="img" aria-label="Cabo de guerra">
-      {[-0.15, -0.1, -0.05, 0, 0.05, 0.1, 0.15].map((d) => (
-        <g key={d}>
-          <line
-            x1={x(0.5 + d)}
-            x2={x(0.5 + d)}
-            y1={y - 40}
-            y2={y + 40}
-            className={d ? 'rope-grid' : 'rope-mid'}
-          />
-          {/* Each side shows the share of whoever pulls toward it (Flávio left, Lula right). */}
-          <text
-            x={x(0.5 + d)}
-            y={y + 64}
-            className={`rope-scale ${d > 0 ? 'f' : d < 0 ? 'l' : ''}`}
-            textAnchor="middle"
-          >
-            {`${Math.round((0.5 + Math.abs(d)) * 100)}%`}
+      {edge.map((e, i) => (
+        <g key={i} className={`serp-behind ${e.key} ${e.ghost ? 'ghost' : ''}`}>
+          <circle cx={e.x} cy={e.y} r={e.ghost ? 7 : 9} />
+          <text x={e.x} y={e.y - 16} textAnchor="middle">
+            {e.label}
           </text>
         </g>
       ))}
-      <line x1={cx - half} x2={cx + half} y1={y} y2={y} className="rope-line" />
-      <line x1={cx} x2={knot} y1={y} y2={y} className={`rope-pull ${lead}`} />
-      {view.trail.map((s, i) => (
-        <circle
-          key={i}
-          cx={x(s)}
-          cy={y}
-          r={4}
-          className={`rope-trail ${s > 0.5 ? 'f' : 'l'}`}
-          style={{ opacity: ((i + 1) / view.trail.length) * 0.5 }}
-        />
-      ))}
-      <circle cx={knot} cy={y} r={17} className={`rope-knot ${lead}`} />
-      <text x={30} y={y - 80} className="rope-end f">
-        {sum ? pct(share) : '—'}
-      </text>
-      <text x={W - 30} y={y - 80} className="rope-end l" textAnchor="end">
-        {sum ? pct(1 - share) : '—'}
-      </text>
-      <text x={knot} y={y - 34} className={`rope-margin ${lead}`} textAnchor="middle">
-        {sum ? `+${int(Math.abs(view.flavio - view.lula))}` : ''}
-      </text>
+      {!camera && compact && (
+        <text x={track.width / 2} y={track.height - 8} className="serp-scale" textAnchor="middle">
+          {int(view.flavio + view.lula)} votos válidos apurados
+        </text>
+      )}
     </svg>
   );
 }

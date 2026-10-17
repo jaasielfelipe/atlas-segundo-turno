@@ -32,7 +32,26 @@ export type UfTotals = {
   valid: number;
   flavio: number;
   lula: number;
+  countedElectorate: number;
+  turnout: number;
+  notValid: number;
 };
+
+/**
+ * Composition of a UF's whole electorate, as shares stacked bottom to top: Flávio, Lula, other
+ * candidates, blank/null (turnout − valid), absent (counted electorate − turnout); the rest is
+ * not counted yet. Sums to 1 when everything is counted.
+ */
+export function composition(t: UfTotals) {
+  const e = t.electorate || 1;
+  return {
+    flavio: t.flavio / e,
+    lula: t.lula / e,
+    others: Math.max(0, t.valid - t.flavio - t.lula) / e,
+    notValid: t.notValid / e,
+    absent: Math.max(0, t.countedElectorate - t.turnout) / e,
+  };
+}
 
 /** Registered voters per UF from the replay segments (fixed for the whole count). */
 export function electorateByUf(file: ReplayFile) {
@@ -62,12 +81,18 @@ export function ufTotals(
       valid: 0,
       flavio: 0,
       lula: 0,
+      countedElectorate: 0,
+      turnout: 0,
+      notValid: 0,
     };
     t.sections += m.sections;
     t.totalized += m.totalized;
     t.valid += m.valid;
     t.flavio += m.flavio;
     t.lula += m.lula;
+    t.countedElectorate += m.countedElectorate;
+    t.turnout += m.turnout;
+    t.notValid += m.notValid;
     out.set(uf, t);
   });
   return out;

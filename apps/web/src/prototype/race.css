@@ -176,6 +176,10 @@ body,
   stroke-width: 3;
   stroke-dasharray: 4 3;
 }
+.serp-behind.ghost circle {
+  stroke-dasharray: 2 3;
+  opacity: 0.8;
+}
 .serp-behind text {
   font-size: 11px;
   font-weight: 600;
@@ -269,4 +273,106 @@ body,
 .race-error {
   padding: 40px;
   color: #ffb4a8;
+}
+
+/* Camera + whole track layout. */
+.race.race2 {
+  grid-template-columns: 1fr 640px;
+  grid-template-rows: auto 1fr;
+}
+.race-camera {
+  min-height: 0;
+}
+.race-camera .serp {
+  width: 100%;
+  height: 100%;
+}
+.race-whole {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+}
+.race-whole .serp {
+  width: 100%;
+  height: auto;
+}
+.serp.compact .serp-asphalt {
+  stroke-width: 18;
+}
+.serp.compact .serp-progress,
+.serp.compact .serp-increment {
+  stroke-width: 3.5;
+}
+.serp.compact .serp-scale {
+  font-size: 11px;
+}
+.serp-ghost circle {
+  fill: none;
+  stroke-width: 2.5;
+  stroke-dasharray: 3 3;
+  opacity: 0.9;
+}
+.serp-ghost text {
+  font-size: 11px;
+  font-weight: 600;
+}
+.serp-ghost.f circle {
+  stroke: var(--flavio-inc);
+}
+.serp-ghost.f text {
+  fill: var(--flavio-inc);
+}
+.serp-ghost.l circle {
+  stroke: var(--lula-inc);
+}
+.serp-ghost.l text {
+  fill: var(--lula-inc);
+}
+.race-ghost {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.race-ghost div {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 14px;
+  color: var(--muted);
+}
+.race-ghost dd {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.race-ghost dd.f {
+  color: var(--flavio);
+}
+.race-ghost dd.l {
+  color: var(--lula);
+}
+.ring {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px dashed;
+  vertical-align: -2px;
+}
+.ring.f {
+  border-color: var(--flavio-inc);
+}
+.ring.l {
+  border-color: var(--lula-inc);
+}
+.race-note {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+.synthetic {
+  color: #e2b85a;
 }

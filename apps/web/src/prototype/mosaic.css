@@ -66,6 +66,7 @@ body,
   min-height: 0;
 }
 .mos-region {
+  flex: none;
   display: flex;
   flex-direction: column;
   min-width: 0;
@@ -79,6 +80,7 @@ body,
   letter-spacing: 0.08em;
   text-transform: uppercase;
   white-space: nowrap;
+  overflow: hidden;
 }
 .mos-region h2 small {
   font-size: 12px;
@@ -94,6 +96,7 @@ body,
   min-height: 0;
 }
 .mos-col {
+  flex: none;
   display: flex;
   flex-direction: column;
   align-items: stretch;
@@ -121,37 +124,41 @@ body,
   color: var(--tie);
 }
 .glass {
-  position: relative;
   flex: 1;
   display: flex;
-  align-items: flex-end;
+  flex-direction: column-reverse;
   background: #161b21;
   border-radius: 3px;
   overflow: hidden;
 }
-.fill {
-  display: flex;
-  width: 100%;
+.band {
+  flex: none;
   transition: height 900ms ease;
 }
-.fill i {
-  transition: flex-grow 900ms ease;
+.band + .band {
+  box-shadow: 0 -1px 0 #0d1014;
 }
-.fill .f {
+.flavio {
   background: var(--flavio);
 }
-.fill .o {
-  background: #3a414b;
-}
-.fill .l {
+.lula {
   background: var(--lula-fill);
 }
-.half {
-  position: absolute;
-  left: 50%;
-  top: 0;
-  bottom: 0;
-  border-left: 1px dashed rgba(236, 235, 230, 0.35);
+.others {
+  background: #4b525c;
+}
+.notValid {
+  background: #6e6a5c;
+}
+.absent {
+  background: #2c333d;
+}
+.mos-legend .key {
+  display: inline-block;
+  width: 11px;
+  height: 11px;
+  border-radius: 2px;
+  vertical-align: -1px;
 }
 .uf {
   margin-top: 6px;
@@ -170,8 +177,7 @@ body,
   color: #ffb4a8;
 }
 @media (prefers-reduced-motion: reduce) {
-  .fill,
-  .fill i {
+  .band {
     transition: none;
   }
 }
