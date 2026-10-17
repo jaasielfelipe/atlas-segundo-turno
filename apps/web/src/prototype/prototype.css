@@ -277,6 +277,10 @@ body,
   font-size: 17px;
   color: var(--muted);
 }
+.ticker-view .swing small {
+  font-size: 13px;
+  opacity: 0.75;
+}
 .proto-error {
   position: absolute;
   inset: auto 24px 50% 24px;

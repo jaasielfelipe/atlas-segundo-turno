@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 /** A municipality that just closed: final shares and margin change vs the 1st round (p.p.). */
 export type TickerItem = {
@@ -43,12 +43,24 @@ export default function Ticker({
   const [items, setItems] = useState<TickerItem[]>([]);
   const pullRef = useRef(pull);
   pullRef.current = pull;
+  // Scroll offset and the item asked to leave. When React removes that item, the offset must be
+  // corrected in the same frame, before paint (layout effect below); otherwise the strip jumps
+  // by one item width for a frame (flicker).
+  const motion = useRef({ offset: 0, leaving: null as { el: Element; width: number } | null });
+  useLayoutEffect(() => {
+    const m = motion.current,
+      list = track.current;
+    if (!m.leaving || !list || list.children[0] === m.leaving.el) return;
+    m.offset -= m.leaving.width;
+    m.leaving = null;
+    list.style.transform = `translateX(${-m.offset}px)`;
+  }, [items]);
 
   useEffect(() => {
     let frame = 0,
       last = performance.now(),
-      offset = 0,
       waiting = false;
+    const m = motion.current;
     const step = (now: number) => {
       const dt = Math.min(100, now - last);
       last = now;
@@ -56,16 +68,16 @@ export default function Ticker({
         list = track.current;
       if (view && list) {
         const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        if (list.children.length) offset += (speed * dt) / 1000 / (reduce ? 4 : 1);
+        if (list.children.length) m.offset += (speed * dt) / 1000 / (reduce ? 4 : 1);
         // The track starts one screen to the right (padding-left: 100%); drop the first item
         // once it has fully left on the left.
         const first = list.children[0] as HTMLElement | undefined;
-        if (first && offset > first.offsetLeft + first.offsetWidth) {
-          offset -= first.offsetWidth;
+        if (!m.leaving && first && m.offset > first.offsetLeft + first.offsetWidth) {
+          m.leaving = { el: first, width: first.offsetWidth };
           setItems((xs) => xs.slice(1));
         }
         // Ask for more when the tail is near the right edge.
-        if (!waiting && list.scrollWidth - offset < view.clientWidth + 200) {
+        if (!waiting && list.scrollWidth - m.offset < view.clientWidth + 200) {
           const next = pullRef.current();
           if (next) {
             waiting = true;
@@ -73,7 +85,7 @@ export default function Ticker({
             requestAnimationFrame(() => (waiting = false));
           }
         }
-        list.style.transform = `translateX(${-offset}px)`;
+        list.style.transform = `translateX(${-m.offset}px)`;
       }
       frame = requestAnimationFrame(step);
     };
@@ -99,9 +111,13 @@ export default function Ticker({
                 </span>
                 <span className="f">{t.valid ? pct(t.flavio / t.valid) : '—'}</span>
                 <span className="l">{t.valid ? pct(t.lula / t.valid) : '—'}</span>
-                <span className={`swing ${toward ?? ''}`} title="variação da margem vs 1º turno">
-                  {t.swing === null ? '—' : toward === 't' ? '±0' : `▲${pp(t.swing)}`}
-                </span>
+                {/* Margin change vs the 1st round, said in place (colour: who gained margin). */}
+                {t.swing !== null && (
+                  <span className={`swing ${toward ?? ''}`}>
+                    {toward === 't' ? '±0' : `▲ ${pp(t.swing)}`}
+                    <small> vs 1º turno</small>
+                  </span>
+                )}
               </li>
             );
           })}

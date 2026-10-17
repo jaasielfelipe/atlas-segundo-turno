@@ -104,7 +104,7 @@ export default function Telao() {
         </main>
         <Ticker
           label="Municípios encerrados"
-          note={engine.mode === 'demo' ? '2º turno sintético' : '▲ margem vs 1º turno'}
+          note={engine.mode === 'demo' ? '2º turno sintético' : undefined}
           pull={() => {
             const c = engine.closed.next();
             if (!c || !engine.file) return null;
@@ -370,6 +370,11 @@ function RacePanel({ engine }: { engine: TelaoEngine }) {
   const total = finish ? view.target : br.electorate * TRACK_SHARE;
   return (
     <section className={`t-race ${view.victory ? `won ${view.victory.winner}` : ''}`}>
+      {/* Above the track: it belongs to the race, not to the mosaic below. */}
+      <p className="t-race-legend">
+        <i className="ring f" />
+        <i className="ring l" /> mesmo candidato com os votos do 1º turno nas zonas já encerradas
+      </p>
       <div className="t-track">
         <Serpentine
           track={whole}
@@ -378,10 +383,6 @@ function RacePanel({ engine }: { engine: TelaoEngine }) {
           fixed={finish ? null : br.electorate / 2}
         />
       </div>
-      <p className="t-race-legend">
-        <i className="ring f" />
-        <i className="ring l" /> mesmo candidato com os votos do 1º turno nas zonas já encerradas
-      </p>
     </section>
   );
 }
@@ -455,10 +456,6 @@ function MosaicPanel({ engine }: { engine: TelaoEngine }) {
           );
         })}
       </div>
-      <p className="mos-legend">
-        área: eleitores aptos · vermelho desce do topo, verde sobe da base · vazio entre eles:
-        demais aptos e ainda não apurado
-      </p>
     </section>
   );
 }

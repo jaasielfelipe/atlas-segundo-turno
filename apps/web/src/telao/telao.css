@@ -244,7 +244,7 @@
 }
 .t-race {
   display: grid;
-  grid-template-rows: 1fr auto;
+  grid-template-rows: auto 1fr;
   gap: 6px;
   min-height: 0;
 }
@@ -373,8 +373,11 @@
   min-height: 18px;
 }
 .t-mosaic .uf {
-  font-size: 10px;
+  flex: none;
+  height: 18px;
   margin-top: 2px;
+  font-size: 10px;
+  overflow: visible;
 }
 .t-mosaic .mos-legend {
   font-size: 11px;
@@ -531,7 +534,6 @@
   writing-mode: vertical-rl;
   text-orientation: upright;
   letter-spacing: -2px;
-  font-size: 8.5px;
+  font-size: 8px;
   line-height: 1;
-  margin-top: 3px;
 }
