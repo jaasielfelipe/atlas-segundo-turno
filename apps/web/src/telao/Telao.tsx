@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import Ticker, { type TickerItem } from '../prototype/Ticker';
-import { Serpentine, VictoryBanner, zoomBump, type TrackView } from '../prototype/Serpentine';
+import { Serpentine, VictoryBanner, type TrackView } from '../prototype/Serpentine';
 import { makeTrack } from '../prototype/track';
 import { mosaic, REGIONS } from '../prototype/mosaic';
 import type { Arrival } from '../prototype/replay';
@@ -109,7 +109,6 @@ export default function Telao() {
               swing: c.swing,
             } satisfies TickerItem;
           }}
-          backlog={() => engine.closed.waiting}
         />
         {engine.error && <p className="t-error">{engine.error}</p>}
         <VictoryOverlay engine={engine} />
@@ -118,6 +117,8 @@ export default function Telao() {
   );
 }
 let closedId = 0;
+/** Signed vote difference in millions, e.g. “+4,2 mi”. */
+const gap = (v: number) => `${v >= 0 ? '+' : '−'}${mi(Math.abs(v))}`;
 
 function Header({ engine }: { engine: TelaoEngine }) {
   const br = engine.official.br;
@@ -125,6 +126,15 @@ function Header({ engine }: { engine: TelaoEngine }) {
   const won = winner(br);
   const collecting = engine.status?.collecting ?? false;
   const names = engine.mode === 'demo' ? DEMO_NAMES : NAMES;
+  // Exact change vs the 1st round on the closed município–zona units (runner − ghost).
+  const n = engine.replay?.national;
+  const delta =
+    engine.replay?.baseline && n
+      ? {
+          flavio: n.flavio - n.ghost.exchange.flavio,
+          lula: n.lula - n.ghost.exchange.lula,
+        }
+      : null;
   return (
     <header className="t-head">
       <div className="t-title">
@@ -140,12 +150,18 @@ function Header({ engine }: { engine: TelaoEngine }) {
         <div className={`cand f ${won === 'f' ? 'won' : ''}`}>
           <span className="name">{names.f}</span>
           <span className="share">{valid ? pct(br!.flavio / valid) : '—'}</span>
-          <span className="votes">{br ? int(br.flavio) : '—'}</span>
+          <span className="votes">
+            {br ? int(br.flavio) : '—'}
+            {delta && <em className="delta">{gap(delta.flavio)} vs 1º turno</em>}
+          </span>
         </div>
         <div className={`cand l ${won === 'l' ? 'won' : ''}`}>
           <span className="name">{names.l}</span>
           <span className="share">{valid ? pct(br!.lula / valid) : '—'}</span>
-          <span className="votes">{br ? int(br.lula) : '—'}</span>
+          <span className="votes">
+            {br ? int(br.lula) : '—'}
+            {delta && <em className="delta">{gap(delta.lula)} vs 1º turno</em>}
+          </span>
         </div>
       </div>
       <div className="t-progress">
@@ -280,7 +296,6 @@ function ZoneStream({ engine }: { engine: TelaoEngine }) {
  * (exact; distance to the runner is the change on those units), mathematical victory effect.
  */
 function RacePanel({ engine }: { engine: TelaoEngine }) {
-  const camera = useMemo(() => makeTrack({ n: 8, width: 1880, radius: 28 }), []);
   const whole = useMemo(() => makeTrack({ n: 10, width: 780, radius: 25, top: 46, side: 18 }), []);
   const [view, setView] = useState<TrackView | null>(null);
   const state = useRef({
@@ -340,43 +355,10 @@ function RacePanel({ engine }: { engine: TelaoEngine }) {
   if (!view || !br)
     return <section className="t-race empty">Aguardando o agregado oficial…</section>;
   const total = br.electorate * TRACK_SHARE;
-  const gap = (now: number, then: number) =>
-    then > 0 ? `${now >= then ? '+' : '−'}${mi(Math.abs(now - then))}` : '—';
   return (
     <section className={`t-race ${view.victory ? `won ${view.victory.winner}` : ''}`}>
       <div className="t-track">
         <Serpentine track={whole} view={view} total={total} fixed={br.electorate / 2} />
-        <div className="t-pip race-camera" aria-label="Câmera no líder">
-          <Serpentine
-            track={camera}
-            view={view}
-            total={total}
-            fixed={br.electorate / 2}
-            camera={{ zoom: 4 + 2 * zoomBump(view.victory?.elapsed ?? null), aspect: 330 / 190 }}
-          />
-        </div>
-      </div>
-      <div className="t-race-foot">
-        {view.ghost && (
-          <dl className="race-ghost">
-            <div>
-              <dt>
-                <i className="ring f" /> vs 1º turno nas mesmas zonas
-              </dt>
-              <dd className="f">{gap(br.flavio, view.ghost.flavio)}</dd>
-            </div>
-            <div>
-              <dt>
-                <i className="ring l" /> vs 1º turno nas mesmas zonas
-              </dt>
-              <dd className="l">{gap(br.lula, view.ghost.lula)}</dd>
-            </div>
-          </dl>
-        )}
-        <p className="race-note">
-          Pista: 0–55% dos aptos · linha amarela: meta ajustada (metade dos válidos ainda possíveis)
-          · anel: zonas encerradas com os votos do 1º turno · janela: câmera no líder
-        </p>
       </div>
     </section>
   );

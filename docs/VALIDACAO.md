@@ -80,3 +80,10 @@ Append-only. Separar sempre: sintético (fixture), simulado TSE, oficial TSE.
 - Vitória matemática vira estado do motor e evento do telão inteiro: letreiro central, fogos na cor do vencedor e brilho nas bordas por ~9 s; depois só a marca no placar. `/telao?demo&vitoria` começa a demonstração 30 s antes da vitória sintética.
 - Na demonstração, o placar e o letreiro usam “candidatura verde/vermelha” — números sintéticos nunca ao lado de nomes reais.
 - Verificações: typecheck, 72 testes, build, formatação; capturas ao vivo (1920×1080 e 1366×768, sem rolagem) e da vitória na demonstração, sem erro de página.
+
+## 16/10/2026 — refinamentos de pista, faixa e mapa
+
+- Pista: sem câmera em janela e sem legenda; os fantasmas já são rotulados. A diferença exata contra o 1º turno nas zonas encerradas (“+X mi vs 1º turno”) passa ao placar, sob os votos de cada candidato. Cabeça de Lula como pequena estrela (segunda pista visual além da cor). Brilho de vitória restrito à faixa do vencedor.
+- Faixa de municípios encerrados: 70 px/s constantes, sem aceleração por fila.
+- Mapa: cor viva enquanto o município está em apuração; escurece quando todas as seções foram apuradas.
+- Verificações: typecheck, 72 testes, build, formatação; capturas ao vivo (1920×1080 e 1366×768) e da demonstração na vitória, sem erro de página.

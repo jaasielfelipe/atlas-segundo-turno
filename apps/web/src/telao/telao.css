@@ -82,9 +82,22 @@
   line-height: 1;
 }
 .t-score .votes {
+  display: flex;
+  flex-direction: column;
   font-size: 15px;
   color: var(--muted);
   font-variant-numeric: tabular-nums;
+}
+.t-score .delta {
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 600;
+}
+.t-score .f .delta {
+  color: var(--flavio);
+}
+.t-score .l .delta {
+  color: var(--lula);
 }
 .t-score .f .share {
   color: var(--flavio);

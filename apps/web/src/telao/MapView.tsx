@@ -4,7 +4,7 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import { height, margin } from '../prototype/replay';
 import type { TelaoEngine } from './engine';
 
-// Colors follow the candidate (user decision): Flávio green, Lula red; dim while counting.
+// Colors follow the candidate (user decision): Flávio green, Lula red; dim once closed.
 const C = {
   background: '#0d1014',
   land: '#171c22',
@@ -31,9 +31,10 @@ const color: ExpressionSpecification = [
   C.land,
   ['==', leader, 0],
   C.tie,
+  // Bright while counting (alive), darker once every section is counted.
   ['==', status, STATUS.closed],
-  ['case', ['>', leader, 0], C.flavio, C.lula],
   ['case', ['>', leader, 0], C.flavioDim, C.lulaDim],
+  ['case', ['>', leader, 0], C.flavio, C.lula],
 ];
 
 /**
@@ -181,9 +182,9 @@ export default function MapView({ engine }: { engine: TelaoEngine }) {
       <ul className="t-map-legend">
         <li>
           <i style={{ background: C.flavio }} />
-          <i style={{ background: C.lula }} /> lidera no município ·{' '}
+          <i style={{ background: C.lula }} /> em apuração ·{' '}
           <i style={{ background: C.flavioDim }} />
-          <i style={{ background: C.lulaDim }} /> em apuração
+          <i style={{ background: C.lulaDim }} /> encerrado · cor: quem lidera
         </li>
         <li>altura: vantagem do líder em votos</li>
       </ul>

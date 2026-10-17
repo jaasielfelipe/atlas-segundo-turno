@@ -60,9 +60,10 @@ const color: ExpressionSpecification = [
   C.land,
   ['==', leader, 0],
   C.tie,
+  // Bright while counting (alive), darker once every section is counted.
   ['==', status, STATUS.closed],
-  ['case', ['>', leader, 0], C.flavio, C.lula],
   ['case', ['>', leader, 0], C.flavioDim, C.lulaDim],
+  ['case', ['>', leader, 0], C.flavio, C.lula],
 ];
 
 type Side = 'f' | 'l' | 't';
@@ -417,7 +418,7 @@ export default function MapPrototype() {
           </li>
           <li>
             <i style={{ background: C.flavioDim }} />
-            <i style={{ background: C.lulaDim }} /> cor escura: em apuração
+            <i style={{ background: C.lulaDim }} /> cor escura: encerrado
           </li>
           <li>
             <i style={{ background: C.land }} /> sem seções apuradas
@@ -457,7 +458,6 @@ export default function MapPrototype() {
         label="Municípios encerrados"
         note="Δ sintético · demonstração"
         pull={() => control.current.pull()}
-        backlog={() => control.current.backlog()}
       />
       {error && <p className="proto-error">{error}</p>}
     </div>

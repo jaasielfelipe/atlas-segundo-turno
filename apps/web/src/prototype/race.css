@@ -381,7 +381,7 @@ body,
 .race-camera {
   position: relative;
 }
-.won .serp-progress {
+g.won > .serp-progress {
   animation: glow 1.6s ease-in-out infinite;
 }
 @keyframes glow {
@@ -476,7 +476,7 @@ body,
   font-size: 13px;
 }
 @media (prefers-reduced-motion: reduce) {
-  .won .serp-progress,
+  g.won > .serp-progress,
   .serp-head.won,
   .victory {
     animation: none;

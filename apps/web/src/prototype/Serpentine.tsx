@@ -160,14 +160,13 @@ export function Serpentine({
       })}
       {runners.map((r) => {
         const p = point(track, along(track, r.votes, total), r.lane);
-        return (
-          <circle
-            key={r.key}
-            cx={p.x}
-            cy={p.y}
-            r={compact ? 5 : 8}
-            className={`serp-head ${r.key} ${won === r.key ? 'won' : ''}`}
-          />
+        const size = compact ? 5 : 8;
+        const className = `serp-head ${r.key} ${won === r.key ? 'won' : ''}`;
+        // Lula's head is a small star: a subtle second cue besides colour.
+        return r.key === 'l' ? (
+          <path key={r.key} d={star(p.x, p.y, size * 1.45)} className={className} />
+        ) : (
+          <circle key={r.key} cx={p.x} cy={p.y} r={size} className={className} />
         );
       })}
       {camera &&
@@ -272,4 +271,16 @@ export function VictoryBanner({
       )}
     </div>
   );
+}
+
+/** Five-pointed star centred on (x, y), outer radius `r`, point up. */
+export function star(x: number, y: number, r: number) {
+  const inner = r * 0.45;
+  let d = '';
+  for (let i = 0; i < 10; i++) {
+    const radius = i % 2 ? inner : r,
+      a = -Math.PI / 2 + (i * Math.PI) / 5;
+    d += `${i ? 'L' : 'M'}${(x + radius * Math.cos(a)).toFixed(1)} ${(y + radius * Math.sin(a)).toFixed(1)}`;
+  }
+  return d + 'Z';
 }
