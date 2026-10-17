@@ -130,3 +130,14 @@ Escopo: o que até agora só tinha sido exercitado com o 2º turno sintético. E
 
 - Decisão do usuário: globo + grade + chegada nos válidos + fundo. `telaoLayout()` (`apps/web/src/telao/layout.ts`, com teste) é a única fonte das opções; `?classico` volta à v1.0, e `?luz` continua opcional. Os parâmetros experimentais `globo`, `grade`, `continentes`, `fundo`, `chegada` e `superficie` saíram.
 - 78 testes; typecheck, build e format:check com código 0. Revisão visual em `/telao?demo&vitoria` (padrão) e `/telao?demo&classico`, sem erros de página.
+
+## 17/10/2026 — busca exploratória por um turno de teste no TSE
+
+Nove requisições manuais, uma por segundo, sem laço e sem coletor ativo (sem lock em `~/.atlas-tse/`).
+
+- **EA11 do simulado** (`resultados-sim…/simulado2026/comum/config/ele-c.json`): 200, `f=s`, gerado em 14/09/2026 20:58:55, last-modified 29/09. Só o pleito 17801 (26/04/2026) com eleições de 1º turno. A federal 21270 traz `cdt2=21271`: o código do 2º turno está reservado, mas a eleição não está listada.
+- **Eleição 21271 no simulado:** EA12 (`21271/config/mun-e021271-cm.json`), EA14 (`21271/dados/br/br-e021271-ab.json`) e EA20 Brasil (`21271/dados/br/br-c0001-e021271-u.json`): todos 404. Controle no mesmo padrão, `21270/dados/br/br-c0001-e021270-u.json`: 200 (last-modified 29/09).
+- **Duas sondagens descartadas:** usaram o diretório com zeros à esquerda (`021270`), formato errado; o diretório não tem zeros, só o nome do arquivo.
+- **EA11 oficial:** last-modified 15/10. Pleito 3221 (25/10/2026) com a federal 6258 (t2), a estadual 6260 (t2), suplementares e consultas. Nada novo.
+- **Busca na web:** a notícia do TSE de julho/2026 descreve simulados com a imprensa (0% → 100%), mas os resultados não trazem data de simulado para o 2º turno. As páginas do TSE e do Jusbrasil recusam leitura automática (403).
+- **Conclusão em 17/10:** não há turno de teste do 2º turno publicado no simulado. O ensaio de compatibilidade segue sendo o teste de API com arquivos reais do 2º turno e contagens sintéticas.
