@@ -514,3 +514,14 @@
   stroke: rgba(5, 7, 10, 0.85);
   stroke-width: 3px;
 }
+
+.t-race-legend {
+  margin: 0;
+  font-size: 11px;
+  color: var(--muted);
+}
+.t-race-legend .ring {
+  width: 10px;
+  height: 10px;
+  margin-right: 2px;
+}

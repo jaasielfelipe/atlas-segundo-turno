@@ -168,12 +168,8 @@ export function Serpentine({
         const p = point(track, along(track, r.ghost, total), r.lane);
         return (
           <g key={`g${r.key}`} className={`serp-ghost ${r.key}`}>
+            {/* Unlabelled on the track: explained once in the panel legend. */}
             <circle cx={p.x} cy={p.y} r={compact ? 6 : 10} />
-            {!compact && (
-              <text x={p.x} y={p.y + (r.lane < 0 ? -16 : 26)} textAnchor="middle">
-                1º turno
-              </text>
-            )}
           </g>
         );
       })}

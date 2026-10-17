@@ -378,6 +378,10 @@ function RacePanel({ engine }: { engine: TelaoEngine }) {
           fixed={finish ? null : br.electorate / 2}
         />
       </div>
+      <p className="t-race-legend">
+        <i className="ring f" />
+        <i className="ring l" /> mesmo candidato com os votos do 1º turno nas zonas já encerradas
+      </p>
     </section>
   );
 }

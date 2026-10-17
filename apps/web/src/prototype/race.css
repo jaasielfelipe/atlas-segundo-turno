@@ -8,7 +8,8 @@
   --lula: #e05555;
   --lula-fill: #be2b2b;
   --lula-inc: #ff9d94;
-  --target: #e2b85a;
+  /* Neutral, from the panel's own greys (the adjusted target is not a candidate colour). */
+  --target: #b9bec6;
 }
 html,
 body,
@@ -116,16 +117,17 @@ body,
   stroke-linejoin: round;
 }
 .serp-tick {
-  stroke: #3a424d;
-  stroke-width: 1;
+  stroke: #2a313a;
+  stroke-width: 0.8;
 }
 .serp-tick.major {
-  stroke: #5b6573;
-  stroke-width: 1.5;
+  stroke: #353d47;
+  stroke-width: 1;
 }
+/* Vote marks stay in the background of the race. */
 .serp-scale {
-  fill: var(--muted);
-  font-size: 13px;
+  fill: #4f5864;
+  font-size: 10px;
 }
 .serp-progress,
 .serp-increment {
@@ -161,7 +163,8 @@ body,
 }
 .serp-target {
   stroke: var(--target);
-  stroke-width: 3;
+  stroke-width: 2.5;
+  stroke-dasharray: 5 3;
 }
 /* Finish line at the end of the track: wider, chequered. */
 .serp-target.finish {
@@ -176,6 +179,7 @@ body,
 }
 .serp-finish.target {
   fill: var(--target);
+  font-weight: 500;
 }
 .serp-behind circle {
   fill: none;
