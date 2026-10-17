@@ -23,7 +23,7 @@ pnpm collect:official:live
 pnpm start                 # http://127.0.0.1:3201/telao
 ```
 
-- Abrir `http://127.0.0.1:3201/telao` em tela cheia (F11). Selo **OFICIAL TSE** no topo; ponto verde “coletando”.
+- Abrir `http://127.0.0.1:3201/telao` em tela cheia (F11). Layout padrão: globo com grade e continentes, mapa ao fundo, pista com chegada nos válidos ainda possíveis. `?classico` volta ao layout da v1.0 (mapa plano na coluna, linha fixa de 50% dos aptos). Selo **OFICIAL TSE** no topo; ponto verde “coletando”.
 - Um coletor por máquina/IP: o lock fica em `~/.atlas-tse/active.lock` (vale para qualquer cópia do repositório). Nunca rodar o coletor do 1º turno ou do simulado junto.
 - Status a cada 10 s no terminal 1 e em `data/official/round2/collector-status.json`.
 - `pnpm backup official` a cada hora (seguro com o coletor rodando).

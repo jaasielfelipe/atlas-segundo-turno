@@ -6,6 +6,7 @@ import { bars, mosaic, REGIONS } from '../prototype/mosaic';
 import type { Arrival } from '../prototype/replay';
 import MapView from './MapView';
 import { adjustedTarget, TelaoEngine, winner, type Mode, type Official } from './engine';
+import { telaoLayout } from './layout';
 import '../prototype/prototype.css';
 import '../prototype/mosaic.css';
 import '../prototype/race.css';
@@ -71,10 +72,10 @@ export default function Telao() {
   useEffect(() => engine.start(), [engine]);
   useEngine(engine);
   const scale = useStageScale();
-  // ?fundo: the map is the background of the whole stage. Its canvas is centred on the old map
-  // column (not offset by camera padding, which skews the globe), larger than the stage and
-  // clipped by it, so Brazil keeps the framing, pitch and zoom of the column version.
-  const background = params.has('fundo');
+  // Default (?classico = map in the column): the map is the background of the whole stage. Its
+  // canvas is centred on the old map column (not offset by camera padding, which skews the
+  // globe), larger than the stage and clipped by it, so Brazil keeps the column framing.
+  const background = telaoLayout().background;
   return (
     <div className="t-viewport">
       <div
@@ -369,9 +370,9 @@ function RacePanel({ engine }: { engine: TelaoEngine }) {
   const br = engine.official.br;
   if (!view || !br)
     return <section className="t-race empty">Aguardando o agregado oficial…</section>;
-  // ?chegada: the whole track is the race to the adjusted target (half of the valid votes still
-  // possible); otherwise 0–55% of the registered voters with the fixed 50% line.
-  const finish = new URLSearchParams(location.search).has('chegada');
+  // Default: the whole track is the race to the adjusted target (half of the valid votes still
+  // possible). ?classico: 0–55% of the registered voters with the fixed 50% line.
+  const finish = telaoLayout().finish;
   const total = finish ? view.target : br.electorate * TRACK_SHARE;
   return (
     <section className={`t-race ${view.victory ? `won ${view.victory.winner}` : ''}`}>

@@ -3,6 +3,7 @@ import maplibregl, { type ExpressionSpecification } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { height, margin } from '../prototype/replay';
 import type { TelaoEngine } from './engine';
+import { telaoLayout } from './layout';
 
 // Colors follow the candidate (user decision): Flávio green, Lula red; dim once closed.
 const C = {
@@ -31,22 +32,10 @@ const STATUS = { none: 0, counting: 1, closed: 2 } as const;
 const MIN_HEIGHT = 1500;
 
 /**
- * Surface experiments, from the URL (`/telao?superficie` = all): `globo` = globe projection with
- * a soft sky and atmosphere; `grade` = graticule every 5°; `luz` = stronger directional light on
- * prisms; `continentes` = the other continents, muted (Natural Earth 1:50m land).
+ * Map surface (see telaoLayout): globe projection with a soft sky and atmosphere, graticule every
+ * 5°, the other continents muted (Natural Earth 1:50m land), optional stronger light on prisms.
  */
-function surfaceOptions() {
-  const q = new URLSearchParams(location.search);
-  const all = q.has('superficie');
-  // `fundo` (map behind the whole stage) uses the approved look: globe with the continents.
-  const background = q.has('fundo');
-  return {
-    globe: all || background || q.has('globo'),
-    grid: all || q.has('grade'),
-    light: all || q.has('luz'),
-    continents: all || background || q.has('continentes'),
-  };
-}
+const surfaceOptions = telaoLayout;
 
 /** Meridians and parallels every `step` degrees, densely sampled so they curve on the globe. */
 function graticule(step = 5) {

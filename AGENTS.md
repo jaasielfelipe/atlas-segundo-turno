@@ -29,6 +29,7 @@ Telão local ao vivo do 2º turno presidencial (25/10/2026) comparando o 2º tur
 ## Decisões do usuário
 
 - 16/10/2026: escopo “apenas presidente”; uso “telão ao vivo”; referência “primeiro turno vs segundo turno” (sem 2018/2022); repositório público.
+- 17/10/2026: layout preferido como padrão do telão — globo, grade, continentes, mapa de fundo e chegada nos válidos (`apps/web/src/telao/layout.ts`); `?classico` mantém a v1.0.
 - Herdadas do 1º turno: taxa de 80 req/s; cores Lula = vermelho, Flávio = verde (por identidade, validadas para daltonismo); fatos aritméticos permitidos quando garantidos pelos números publicados.
 
 ## Estado — 16/10/2026, noite

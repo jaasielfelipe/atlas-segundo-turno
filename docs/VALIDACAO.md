@@ -125,3 +125,8 @@ Escopo: o que até agora só tinha sido exercitado com o 2º turno sintético. E
 - **Cabeçalho.** O delta “vs 1º turno” fica ausente (não “+0”) até alguma unidade encerrar.
 - **Testes.** API com votos sobre arquivos reais do 2º turno com contagens sintéticas (eventos, abstenção com seções não instaladas, versões inconsistentes); vitória no caso limite de empate ainda possível. 77 testes; typecheck, build e format:check com código 0. Revisão visual no ao vivo pré-votação e no demo (`?globo&grade&chegada`), sem erros de página.
 - **Não comprovado:** arquivos reais do 2º turno com votos (só a partir de 25/10). O simulado do TSE de 14/09 tinha só o 1º turno; o servidor do telão lê apenas o ambiente oficial.
+
+## 17/10/2026 — layout preferido como padrão
+
+- Decisão do usuário: globo + grade + chegada nos válidos + fundo. `telaoLayout()` (`apps/web/src/telao/layout.ts`, com teste) é a única fonte das opções; `?classico` volta à v1.0, e `?luz` continua opcional. Os parâmetros experimentais `globo`, `grade`, `continentes`, `fundo`, `chegada` e `superficie` saíram.
+- 78 testes; typecheck, build e format:check com código 0. Revisão visual em `/telao?demo&vitoria` (padrão) e `/telao?demo&classico`, sem erros de página.
