@@ -31,7 +31,8 @@ export function Serpentine({
   track: Track;
   view: TrackView;
   total: number;
-  fixed: number;
+  /** Fixed line (50% of registered voters); null when the track ends at the finish line. */
+  fixed: number | null;
   camera?: { zoom: number; aspect: number };
   /** Whole-track panel: thinner marks, fewer labels. */
   compact?: boolean;
@@ -101,7 +102,9 @@ export function Serpentine({
     });
   }
   const targetU = along(track, view.target, total),
-    fixedU = along(track, fixed, total);
+    fixedU = fixed === null ? null : along(track, fixed, total);
+  // Track that ends at the adjusted target: the finish line is the end of the serpentine.
+  const finishAtEnd = fixed === null;
   const at = (u: number, dy: number) => {
     const p = point(track, u, 0);
     return { x: p.x, y: p.y + dy };
@@ -131,15 +134,31 @@ export function Serpentine({
           )}
         </g>
       ))}
-      <line {...tick(track, fixedU, -20, 20)} className="serp-fixed" />
-      <line {...tick(track, targetU, -20, 20)} className="serp-target" />
+      {fixedU !== null && <line {...tick(track, fixedU, -20, 20)} className="serp-fixed" />}
+      <line
+        {...tick(track, targetU, -20, 20)}
+        className={finishAtEnd ? 'serp-target finish' : 'serp-target'}
+      />
       {!compact && (
         <>
-          <text {...at(fixedU, -26)} className="serp-finish" textAnchor="middle">
-            50% dos aptos
-          </text>
-          <text {...at(targetU, 36)} className="serp-finish target" textAnchor="middle">
-            meta ajustada
+          {fixedU !== null && (
+            <text {...at(fixedU, -26)} className="serp-finish" textAnchor="middle">
+              50% dos aptos
+            </text>
+          )}
+          {/* At the end of the track the label opens inward, never past the edge. */}
+          <text
+            {...at(targetU, 36)}
+            className="serp-finish target"
+            textAnchor={
+              !finishAtEnd
+                ? 'middle'
+                : point(track, targetU, 0).x < track.width / 2
+                  ? 'start'
+                  : 'end'
+            }
+          >
+            {finishAtEnd ? 'chegada' : 'meta ajustada'}
           </text>
         </>
       )}

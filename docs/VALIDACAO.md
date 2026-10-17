@@ -87,3 +87,9 @@ Append-only. Separar sempre: sintético (fixture), simulado TSE, oficial TSE.
 - Faixa de municípios encerrados: 70 px/s constantes, sem aceleração por fila.
 - Mapa: cor viva enquanto o município está em apuração; escurece quando todas as seções foram apuradas.
 - Verificações: typecheck, 72 testes, build, formatação; capturas ao vivo (1920×1080 e 1366×768) e da demonstração na vitória, sem erro de página.
+
+## 16/10/2026 — experimentos (branch `experimentos`)
+
+- **Superfície do mapa** (`/telao?…&globo`, `&grade`, `&luz`, ou `&superficie` para os três): projeção globo do MapLibre 5 com céu/atmosfera (halo no horizonte), grade cartográfica de 5° gerada localmente, luz direcional mais marcada nas extrusões. Sem tiles nem rede.
+- **Pista com chegada pelos válidos** (`&chegada`): a pista inteira vai de 0 à meta ajustada (metade dos válidos ainda possíveis), com a linha de chegada no fim; a escala acompanha a meta, que recua durante a apuração; a vitória matemática coincide com cruzar a chegada e o vencedor para no fim.
+- Verificações: typecheck, 72 testes, build, formatação; capturas das cinco variações na demonstração, sem erro de página.

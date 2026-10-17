@@ -23,6 +23,40 @@ const BRAZIL: [[number, number], [number, number]] = [
   [-34.6, 5.4],
 ];
 const STATUS = { none: 0, counting: 1, closed: 2 } as const;
+
+/**
+ * Surface experiments, from the URL (`/telao?superficie` = all): `globo` = globe projection with
+ * sky and atmosphere; `grade` = graticule every 5°; `luz` = stronger directional light on prisms.
+ */
+function surfaceOptions() {
+  const q = new URLSearchParams(location.search);
+  const all = q.has('superficie');
+  return { globe: all || q.has('globo'), grid: all || q.has('grade'), light: all || q.has('luz') };
+}
+
+/** Meridians and parallels every `step` degrees, densely sampled so they curve on the globe. */
+function graticule(step = 5) {
+  const lines: [number, number][][] = [];
+  for (let lon = -180; lon <= 180; lon += step) {
+    const line: [number, number][] = [];
+    for (let lat = -80; lat <= 80; lat += 2) line.push([lon, lat]);
+    lines.push(line);
+  }
+  for (let lat = -80; lat <= 80; lat += step) {
+    const line: [number, number][] = [];
+    for (let lon = -180; lon <= 180; lon += 2) line.push([lon, lat]);
+    lines.push(line);
+  }
+  return {
+    type: 'FeatureCollection' as const,
+    features: lines.map((coordinates, i) => ({
+      type: 'Feature' as const,
+      id: i,
+      properties: { equator: coordinates.every(([, lat]) => lat === 0) },
+      geometry: { type: 'LineString' as const, coordinates },
+    })),
+  };
+}
 const leader: ExpressionSpecification = ['coalesce', ['feature-state', 'lead'], 0];
 const status: ExpressionSpecification = ['coalesce', ['feature-state', 'status'], 0];
 const color: ExpressionSpecification = [
@@ -48,12 +82,56 @@ export default function MapView({ engine }: { engine: TelaoEngine }) {
     let disposed = false,
       frame = 0,
       unsubscribe = () => {};
+    const surface = surfaceOptions();
     const m = new maplibregl.Map({
       container: container.current!,
       style: {
         version: 8,
-        sources: {},
-        layers: [{ id: 'bg', type: 'background', paint: { 'background-color': C.background } }],
+        ...(surface.globe
+          ? {
+              projection: { type: 'globe' },
+              sky: {
+                'sky-color': '#0d1420',
+                'horizon-color': '#1d3046',
+                'fog-color': '#0d1014',
+                'sky-horizon-blend': 0.6,
+                'horizon-fog-blend': 0.7,
+                'fog-ground-blend': 0.6,
+                'atmosphere-blend': ['interpolate', ['linear'], ['zoom'], 0, 1, 6, 0.7, 9, 0],
+              },
+            }
+          : {}),
+        ...(surface.light
+          ? {
+              light: { anchor: 'map', color: '#fff8ec', intensity: 0.55, position: [1.4, 215, 35] },
+            }
+          : {}),
+        sources: surface.grid ? { grid: { type: 'geojson', data: graticule() } } : {},
+        layers: [
+          {
+            id: 'bg',
+            type: 'background',
+            paint: { 'background-color': surface.globe ? '#121821' : C.background },
+          },
+          ...(surface.grid
+            ? [
+                {
+                  id: 'grid',
+                  type: 'line' as const,
+                  source: 'grid',
+                  paint: {
+                    'line-color': [
+                      'case',
+                      ['get', 'equator'],
+                      surface.globe ? '#3a4c60' : '#2d3b4b',
+                      surface.globe ? '#28323f' : '#1e2733',
+                    ] as ExpressionSpecification,
+                    'line-width': ['case', ['get', 'equator'], 1, 0.6] as ExpressionSpecification,
+                  },
+                },
+              ]
+            : []),
+        ],
       },
       center: [-53.5, -15],
       zoom: 3.5,

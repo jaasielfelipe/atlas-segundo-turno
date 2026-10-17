@@ -354,11 +354,19 @@ function RacePanel({ engine }: { engine: TelaoEngine }) {
   const br = engine.official.br;
   if (!view || !br)
     return <section className="t-race empty">Aguardando o agregado oficial…</section>;
-  const total = br.electorate * TRACK_SHARE;
+  // ?chegada: the whole track is the race to the adjusted target (half of the valid votes still
+  // possible); otherwise 0–55% of the registered voters with the fixed 50% line.
+  const finish = new URLSearchParams(location.search).has('chegada');
+  const total = finish ? view.target : br.electorate * TRACK_SHARE;
   return (
     <section className={`t-race ${view.victory ? `won ${view.victory.winner}` : ''}`}>
       <div className="t-track">
-        <Serpentine track={whole} view={view} total={total} fixed={br.electorate / 2} />
+        <Serpentine
+          track={whole}
+          view={view}
+          total={total}
+          fixed={finish ? null : br.electorate / 2}
+        />
       </div>
     </section>
   );

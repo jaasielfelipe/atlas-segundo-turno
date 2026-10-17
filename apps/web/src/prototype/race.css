@@ -163,6 +163,12 @@ body,
   stroke: var(--target);
   stroke-width: 3;
 }
+/* Finish line at the end of the track: wider, chequered. */
+.serp-target.finish {
+  stroke: #ecebe6;
+  stroke-width: 8;
+  stroke-dasharray: 4 4;
+}
 .serp-finish {
   fill: #ecebe6;
   font-size: 13px;
