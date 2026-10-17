@@ -23,6 +23,12 @@ const BRAZIL: [[number, number], [number, number]] = [
   [-34.6, 5.4],
 ];
 const STATUS = { none: 0, counting: 1, closed: 2 } as const;
+/**
+ * Prisms never share a plane with the land: only municipalities with counted sections are
+ * extruded, and at least this high (metres). A zero-height prism over the land fill z-fights
+ * (flickering dark patches, strongest on the globe).
+ */
+const MIN_HEIGHT = 1500;
 
 /**
  * Surface experiments, from the URL (`/telao?superficie` = all): `globo` = globe projection with
@@ -164,6 +170,7 @@ export default function MapView({ engine }: { engine: TelaoEngine }) {
         id: 'prisms',
         type: 'fill-extrusion',
         source: 'mun',
+        filter: ['in', ['id'], ['literal', []]],
         paint: {
           'fill-extrusion-color': [
             'interpolate',
@@ -195,6 +202,10 @@ export default function MapView({ engine }: { engine: TelaoEngine }) {
         flash = new Float64Array(0);
       let generation = -1;
       const active = new Set<number>();
+      // Feature ids of municipalities with counted sections (the only ones extruded).
+      const extruded = new Set<number>();
+      let filterDirty = true,
+        lastFilter = 0;
       // (Re)bind to the engine's current file: all states from scratch (bootstrap or restart).
       const bind = () => {
         if (!engine.file || !engine.replay) return false;
@@ -205,6 +216,8 @@ export default function MapView({ engine }: { engine: TelaoEngine }) {
         target = new Float64Array(n);
         flash = new Float64Array(n);
         m.removeFeatureState({ source: 'mun' });
+        extruded.clear();
+        filterDirty = true;
         engine.replay.municipalities.forEach((_, i) => update(i, false));
         return true;
       };
@@ -216,7 +229,12 @@ export default function MapView({ engine }: { engine: TelaoEngine }) {
           { source: 'mun', id },
           { status: STATUS[s.status], lead: margin(s).leader },
         );
-        target[i] = height(s, 'votes');
+        if (s.status !== 'none' && !extruded.has(id)) {
+          extruded.add(id);
+          filterDirty = true;
+          current[i] = Math.max(current[i], MIN_HEIGHT);
+        }
+        target[i] = s.status === 'none' ? 0 : Math.max(height(s, 'votes'), MIN_HEIGHT);
         if (bulletin) flash[i] = 1;
         active.add(i);
       };
@@ -230,6 +248,11 @@ export default function MapView({ engine }: { engine: TelaoEngine }) {
         const dt = Math.min(100, now - last);
         last = now;
         if (generation !== engine.generation) bind();
+        if (filterDirty && now - lastFilter > 400) {
+          filterDirty = false;
+          lastFilter = now;
+          m.setFilter('prisms', ['in', ['id'], ['literal', [...extruded]]]);
+        }
         const k = 1 - Math.exp(-dt / 220);
         for (const i of active) {
           current[i] += (target[i] - current[i]) * k;
