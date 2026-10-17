@@ -141,3 +141,8 @@ Nove requisições manuais, uma por segundo, sem laço e sem coletor ativo (sem 
 - **EA11 oficial:** last-modified 15/10. Pleito 3221 (25/10/2026) com a federal 6258 (t2), a estadual 6260 (t2), suplementares e consultas. Nada novo.
 - **Busca na web:** a notícia do TSE de julho/2026 descreve simulados com a imprensa (0% → 100%), mas os resultados não trazem data de simulado para o 2º turno. As páginas do TSE e do Jusbrasil recusam leitura automática (403).
 - **Conclusão em 17/10:** não há turno de teste do 2º turno publicado no simulado. O ensaio de compatibilidade segue sendo o teste de API com arquivos reais do 2º turno e contagens sintéticas.
+
+## 17/10/2026 — telão com a API fora do ar
+
+- Sintoma relatado pelo usuário: “Failed to execute 'json' on 'Response': Unexpected end of JSON input”. Causa: servidor Vite de desenvolvimento (5373) aberto pelo agente ficou órfão depois que a API (3201) foi parada; o proxy respondia 500 sem corpo. O processo órfão foi encerrado.
+- Correção: `readApi()` transforma falta de conexão, HTTP sem JSON e resposta vazia em “Servidor do telão indisponível (…). Verifique o terminal do pnpm start.” e preserva as mensagens de erro do próprio servidor. O telão mantém o último estado. 79 testes; typecheck, build e format:check com código 0.

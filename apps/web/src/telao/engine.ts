@@ -161,11 +161,8 @@ export class TelaoEngine {
   }
 
   // ---- live ----
-  private async api<T>(path: string): Promise<T> {
-    const response = await fetch(path);
-    const body = await response.json();
-    if (!response.ok) throw Error(body.error ?? `HTTP ${response.status}`);
-    return body as T;
+  private api<T>(path: string): Promise<T> {
+    return readApi<T>(path);
   }
   private async bootstrap() {
     const boot = await this.api<Bootstrap>('/api/telao/bootstrap');
@@ -350,6 +347,31 @@ export class TelaoEngine {
       return new Date(Date.parse(this.file.base) + this.demo.simulated * 1000).toISOString();
     return this.official.br?.capturedAt ?? null!;
   }
+}
+
+/**
+ * GET on the local telão API. A server that is down, or a proxy answering without a JSON body,
+ * becomes one clear message instead of a parse error; the telão keeps its last state.
+ */
+export async function readApi<T>(path: string, fetcher: typeof fetch = fetch): Promise<T> {
+  const down = (detail: string) =>
+    Error(`Servidor do telão indisponível (${detail}). Verifique o terminal do pnpm start.`);
+  let response: Response;
+  try {
+    response = await fetcher(path);
+  } catch {
+    throw down('sem conexão');
+  }
+  const text = await response.text();
+  let body: { error?: string } | null = null;
+  try {
+    body = text ? JSON.parse(text) : null;
+  } catch {
+    body = null;
+  }
+  if (!response.ok) throw body?.error ? Error(body.error) : down(`HTTP ${response.status}`);
+  if (body === null) throw down('resposta vazia');
+  return body as T;
 }
 
 /** Official-shaped summary of the replay's national sums (demo only). */
