@@ -105,3 +105,10 @@ Append-only. Separar sempre: sintético (fixture), simulado TSE, oficial TSE.
 - **Pista:** legenda dos fantasmas acima da pista.
 - **Faixa em duas linhas:** cidade em branco; abaixo, “FF% vs LL%” e **ΔT1 +XX** — o maior ganho de participação nos válidos do 1º para o 2º turno entre os dois finalistas, na cor de quem ganhou mais (independe de quem lidera; teste: Flávio lidera 45→52 e Lula ganha mais 40→48 → ΔT1 vermelho +8).
 - **Mosaico:** todas as siglas giradas 90°, mesma altura; barras iguais (208 px medidos).
+
+## 17/10/2026 — mosaico fecha no fim da apuração (sintético)
+
+- Altura das barras por UF = votos ÷ (aptos − abstenções apuradas − não válidos apurados), o maior total de válidos ainda possível (mesma base da meta ajustada da pista). Antes o divisor era o total de aptos, e abstenções/brancos/nulos (~25%) ficavam sempre vazios.
+- Função pura `bars()` em `apps/web/src/prototype/mosaic.ts`, com teste (fim = 100%; meio = vazio igual aos aptos não apurados).
+- Replay até o fim, **2º turno sintético**: Flávio + Lula = 100,0% em todas as UFs (BA e MG 99,9% por arredondamento). Com os votos reais do 1º turno a soma fica entre 85% e 95%, como esperado, porque os demais candidatos não aparecem.
+- typecheck, test (75), build e format:check com código 0; revisão visual na vitória do demo: há vazio só nas UFs com seções a apurar.

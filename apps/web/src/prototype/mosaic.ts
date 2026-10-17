@@ -112,3 +112,21 @@ export function ufTotals(
 /** Leader's margin in percentage points of the valid votes counted; null before any vote. */
 export const marginPoints = (t: Pick<UfTotals, 'valid' | 'flavio' | 'lula'>) =>
   t.valid > 0 ? ((t.flavio - t.lula) / t.valid) * 100 : null;
+
+/**
+ * Bars of a UF in the mosaic, as fractions of its box. The box is the valid votes counted plus
+ * the registered voters not counted yet — registered − abstentions counted − non-valid counted,
+ * the largest valid total still possible. Flávio from the bottom, Lula from the top; the gap is
+ * what is still to be counted, so it closes exactly when every section is counted.
+ */
+export function bars(o: {
+  electorate: number;
+  abstention: number;
+  notValid: number;
+  flavio: number;
+  lula: number;
+}) {
+  const possible = o.electorate - o.abstention - o.notValid;
+  if (possible <= 0) return { flavio: 0, lula: 0 };
+  return { flavio: o.flavio / possible, lula: o.lula / possible };
+}

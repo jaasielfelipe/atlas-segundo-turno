@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { electorateByUf, marginPoints, mosaic, REGIONS, ufTotals } from './mosaic';
+import { bars, electorateByUf, marginPoints, mosaic, REGIONS, ufTotals } from './mosaic';
 import { ReplayState, type ReplayFile } from './replay';
 
 it('larguras: nenhum estado abaixo do mínimo e maior nunca mais estreito que menor', () => {
@@ -60,4 +60,17 @@ it('totais por UF somam os municípios; margem indefinida sem votos', () => {
   // Every UF and the exterior belong to exactly one region.
   const ufs = REGIONS.flatMap((g) => g.ufs);
   expect(new Set(ufs).size).toBe(28);
+});
+
+it('mosaico fecha no fim: caixa = válidos apurados + aptos ainda não apurados', () => {
+  // UF with 1000 registered voters, fully counted: 210 absent, 40 blank/null, 750 valid.
+  const end = bars({ electorate: 1000, abstention: 210, notValid: 40, flavio: 400, lula: 350 });
+  expect(end.flavio + end.lula).toBeCloseTo(1);
+  // Halfway: 500 counted (105 absent, 20 non-valid, 375 valid): the gap is the 500 not counted.
+  const half = bars({ electorate: 1000, abstention: 105, notValid: 20, flavio: 200, lula: 175 });
+  expect(1 - half.flavio - half.lula).toBeCloseTo(500 / 875);
+  expect(bars({ electorate: 0, abstention: 0, notValid: 0, flavio: 0, lula: 0 })).toEqual({
+    flavio: 0,
+    lula: 0,
+  });
 });

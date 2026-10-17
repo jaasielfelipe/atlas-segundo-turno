@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalS
 import Ticker, { type TickerItem } from '../prototype/Ticker';
 import { Serpentine, VictoryBanner, type TrackView } from '../prototype/Serpentine';
 import { makeTrack } from '../prototype/track';
-import { mosaic, REGIONS } from '../prototype/mosaic';
+import { bars, mosaic, REGIONS } from '../prototype/mosaic';
 import type { Arrival } from '../prototype/replay';
 import MapView from './MapView';
 import { adjustedTarget, TelaoEngine, winner, type Mode, type Official } from './engine';
@@ -433,17 +433,12 @@ function MosaicPanel({ engine }: { engine: TelaoEngine }) {
               <div className="mos-cols">
                 {g.rows.map(([uf, o]) => {
                   const w = widthOf.get(uf) ?? 0;
+                  const b = bars(o);
                   return (
                     <div key={uf} className="mos-col" style={{ width: `${w}px` }}>
                       <div className="glass">
-                        <i
-                          className="band lula"
-                          style={{ height: `${(o.lula / o.electorate) * 100}%` }}
-                        />
-                        <i
-                          className="band flavio"
-                          style={{ height: `${(o.flavio / o.electorate) * 100}%` }}
-                        />
+                        <i className="band lula" style={{ height: `${b.lula * 100}%` }} />
+                        <i className="band flavio" style={{ height: `${b.flavio * 100}%` }} />
                       </div>
                       <span className="uf">{uf === 'zz' ? 'EX' : uf.toUpperCase()}</span>
                     </div>
