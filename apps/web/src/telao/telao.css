@@ -446,9 +446,16 @@
 
 /* ?fundo: the map behind the whole stage. Panels become transparent; data and text stay
    opaque, with a soft shadow for reading over the map. */
+/* Canvas 2500×1088 centred on the old map column (x 250–1090, y 84–1004): centre (670, 544). */
+.bg-map {
+  overflow: hidden;
+}
 .t-map-bg {
   position: absolute;
-  inset: 0;
+  left: -580px;
+  top: 0;
+  width: 2500px;
+  height: 1088px;
   z-index: 0;
   pointer-events: none;
 }
@@ -488,8 +495,8 @@
   stroke: rgba(29, 35, 43, 0.62);
 }
 .bg-map .t-map-legend {
-  left: 270px;
-  bottom: 84px;
+  left: 850px;
+  bottom: 92px;
 }
 .bg-map .t-head,
 .bg-map .t-stream,

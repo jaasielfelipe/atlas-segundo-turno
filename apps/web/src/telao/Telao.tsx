@@ -71,7 +71,9 @@ export default function Telao() {
   useEffect(() => engine.start(), [engine]);
   useEngine(engine);
   const scale = useStageScale();
-  // ?fundo: the map is the background of the whole stage, Brazil framed where the map column was.
+  // ?fundo: the map is the background of the whole stage. Its canvas is centred on the old map
+  // column (not offset by camera padding, which skews the globe), larger than the stage and
+  // clipped by it, so Brazil keeps the framing, pitch and zoom of the column version.
   const background = params.has('fundo');
   return (
     <div className="t-viewport">
@@ -87,8 +89,8 @@ export default function Telao() {
           <MapView
             engine={engine}
             className="t-map t-map-bg"
-            framing={{ top: 124, right: 850, bottom: 106, left: 270 }}
-            zoomBoost={0.25}
+            framing={{ top: 128, right: 740, bottom: 118, left: 740 }}
+            zoomBoost={0.18}
           />
         )}
         <Header engine={engine} />
