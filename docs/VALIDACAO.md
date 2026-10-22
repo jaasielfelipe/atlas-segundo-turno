@@ -153,12 +153,13 @@ Nove requisições manuais, uma por segundo, sem laço e sem coletor ativo (sem 
   - `round1.sqlite.gz`: 18,4 MB; base com `integrity_check` ok e WAL vazio antes da cópia;
   - `replay-round1.json.gz`: 0,56 MB;
   - `SHA256SUMS`.
-  O conteúdo é só de dados públicos do TSE; não há caminhos locais nem e-mails.
+    O conteúdo é só de dados públicos do TSE; não há caminhos locais nem e-mails.
 - Os hashes de conteúdo ficam em `apps/api/src/services/round1-data.ts`:
   - base: `119f3024…5db669`;
   - replay: `863c8c72…6a2c2f`.
 
   O script recusa download adulterado e nunca sobrescreve um arquivo local diferente. Testes: 80.
+
 - Ponta a ponta, num clone novo do GitHub (`c81e45b`):
   - `pnpm install --frozen-lockfile`;
   - `pnpm data:1t`: instalou os dois arquivos com os hashes acima; na 2ª execução, “já presente” sem baixar de novo;

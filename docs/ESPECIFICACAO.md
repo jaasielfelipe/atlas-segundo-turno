@@ -10,11 +10,11 @@ Escopo: Presidente apenas. Sem governador, sem histórico de 2018/2022, sem pain
 
 ## 2. Fontes
 
-| Dado | Origem | Estado |
-|---|---|---|
-| 2º turno ao vivo | EA11 → EA12 → EA20 (agregados e zonas) + EA14/EA15 como pistas, ambiente oficial TSE; pleito **3221**, eleição **6258** | descoberta validada no EA11 de 15/10/2026 (`packages/fixtures/round2/`) |
-| 1º turno (base) | EA20 zonal oficial da eleição **6257**, capturado na noite de 04/10/2026 pelo projeto anterior, com 12 segmentos recapturados em 16/10/2026 | congelada em `data/baseline/round1.sqlite`; conciliada com o total nacional oficial (§6) |
-| Identidade dos finalistas | `sqcand` oficial nos arquivos EA20 de 6257 e 6258 | Flávio `280002551544` (22), Lula `280002542548` (13) — iguais nos dois turnos |
+| Dado                      | Origem                                                                                                                                      | Estado                                                                                   |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| 2º turno ao vivo          | EA11 → EA12 → EA20 (agregados e zonas) + EA14/EA15 como pistas, ambiente oficial TSE; pleito **3221**, eleição **6258**                     | descoberta validada no EA11 de 15/10/2026 (`packages/fixtures/round2/`)                  |
+| 1º turno (base)           | EA20 zonal oficial da eleição **6257**, capturado na noite de 04/10/2026 pelo projeto anterior, com 12 segmentos recapturados em 16/10/2026 | congelada em `data/baseline/round1.sqlite`; conciliada com o total nacional oficial (§6) |
+| Identidade dos finalistas | `sqcand` oficial nos arquivos EA20 de 6257 e 6258                                                                                           | Flávio `280002551544` (22), Lula `280002542548` (13) — iguais nos dois turnos            |
 
 Cadastro: o EA12 de 6258 tem os **mesmos 6.292 segmentos município–zona** do EA12 de 6257 (verificado por conjunto, não só por digest). Se o TSE publicar cadastro diferente, a zona afetada sai da comparação com status `registry_changed`.
 

@@ -40,6 +40,10 @@ pnpm start                 # http://127.0.0.1:3201/telao
 
 Vitória matemática: só quando um finalista passa da metade do maior total de válidos ainda possível (válidos apurados + eleitorado das seções ainda não apuradas; eleitores de seções não instaladas contam como ausentes) — o ponto em que cruza a meta ajustada na pista. Nenhum resultado das seções restantes muda o vencedor a partir daí; o letreiro informa que o resultado oficial é do TSE.
 
+## Em servidor (VPS)
+
+`ATLAS_API_HOST` muda o endereço de escuta (padrão `127.0.0.1`), por exemplo `ATLAS_API_HOST=0.0.0.0` dentro de um contêiner. A API não tem autenticação: na VPS, prefira manter `127.0.0.1` com nginx/Caddy na frente, ou limite a porta 3201 no firewall. Um coletor por IP continua valendo.
+
 ## Incidentes
 
 - **Rodapé do cabeçalho com “arquivo(s) inconsistente(s) não exibido(s)”:** arquivos em que os votos dos dois finalistas não somam os válidos (destinação ausente ou alterada). O telão mantém a última versão consistente de cada território e não desenha a inconsistente. Anotar o horário; não exige ação imediata.

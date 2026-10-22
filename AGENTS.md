@@ -8,7 +8,7 @@ Telão local ao vivo do 2º turno presidencial (25/10/2026) comparando o 2º tur
 
 ## Regras inegociáveis
 
-1. Local, usuário único, `127.0.0.1`. Sem contas, nuvem, Docker obrigatório, PostgreSQL ou Redis. Stack: React/Vite/TypeScript, Node/Fastify, SQLite WAL, Vitest, Playwright. Justificar qualquer biblioteca nova.
+1. Local, usuário único, `127.0.0.1` por padrão (`ATLAS_API_HOST` só para servidor atrás de proxy reverso/contêiner, decisão de 21/10/2026). Sem contas, nuvem, Docker obrigatório, PostgreSQL ou Redis. Stack: React/Vite/TypeScript, Node/Fastify, SQLite WAL, Vitest, Playwright. Justificar qualquer biblioteca nova.
 2. TSE é a fonte primária. Descobrir pelo EA11; validar fase, eleição, **turno**, cargo, abrangência, origem e identificadores em cada arquivo.
 3. Simulado/fixture nunca apresentado como oficial; `f=s` na rota oficial é falha.
 4. Um coletor TSE por máquina/IP; teto 80 req/s (304 conta). Sem loops de 404. Coleta só com pedido explícito do usuário.
@@ -30,6 +30,7 @@ Telão local ao vivo do 2º turno presidencial (25/10/2026) comparando o 2º tur
 
 - 16/10/2026: escopo “apenas presidente”; uso “telão ao vivo”; referência “primeiro turno vs segundo turno” (sem 2018/2022); repositório público.
 - 17/10/2026: layout preferido como padrão do telão — globo, grade, continentes, mapa de fundo e chegada nos válidos (`apps/web/src/telao/layout.ts`); `?classico` mantém a v1.0.
+- 21/10/2026: o host do servidor pode ser definido por `ATLAS_API_HOST` (pedido para hospedar em VPS); o padrão continua `127.0.0.1`. A API não tem autenticação: fora da máquina local, expor só via proxy reverso/firewall.
 - Herdadas do 1º turno: taxa de 80 req/s; cores Lula = vermelho, Flávio = verde (por identidade, validadas para daltonismo); fatos aritméticos permitidos quando garantidos pelos números publicados.
 
 ## Estado — 17/10/2026 (`v1.1-telao-2t`)
