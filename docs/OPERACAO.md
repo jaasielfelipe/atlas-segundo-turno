@@ -6,11 +6,12 @@ Telão local (`127.0.0.1`), um único computador. Regras: [../AGENTS.md](../AGEN
 
 ```powershell
 pnpm install --frozen-lockfile
+pnpm data:1t               # base do 1º turno + replay da demonstração (antes do build)
 pnpm build                 # typecheck + geometria + web + servidor
 pnpm test
 ```
 
-Base do 1º turno (fantasmas e “margem vs 1º turno”): `data/baseline/round1.sqlite`. Já construída nesta máquina; em outra, `pnpm baseline:round1 <acervo do 1º turno>` e `pnpm baseline:refresh`. Sem a base, o telão funciona sem fantasmas e o fluxo mostra a margem do boletim em votos.
+Base do 1º turno (fantasmas e “margem vs 1º turno”): `data/baseline/round1.sqlite`. Em outra máquina: `pnpm data:1t` **antes** do `pnpm build` (baixa a base e o replay da demonstração da release `dados-1t-v1` e confere os hashes). Quem tem o acervo do 1º turno pode reconstruí-la com `pnpm baseline:round1 <acervo>` e `pnpm baseline:refresh`. Sem a base, o telão funciona sem fantasmas e o fluxo mostra a margem do boletim em votos.
 
 ## No dia (a partir de ~16h30; urnas fecham às 17h de Brasília)
 
@@ -30,12 +31,12 @@ pnpm start                 # http://127.0.0.1:3201/telao
 
 ## O que o telão mostra e de onde vem
 
-| Peça | Fonte |
-|---|---|
-| Placar, % de seções, corrida, vitória matemática | Agregado oficial EA20 Brasil |
-| Mosaico por região | Agregados oficiais EA20 de cada UF e do exterior |
+| Peça                                                    | Fonte                                                                             |
+| ------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| Placar, % de seções, corrida, vitória matemática        | Agregado oficial EA20 Brasil                                                      |
+| Mosaico por região                                      | Agregados oficiais EA20 de cada UF e do exterior                                  |
 | Mapa por município, fluxo de zonas, faixa de encerrados | Arquivos EA20 de cada município–zona (soma exata dos segmentos de cada município) |
-| Fantasmas e “margem vs 1º turno” | Mesmas município–zonas na base do 1º turno |
+| Fantasmas e “margem vs 1º turno”                        | Mesmas município–zonas na base do 1º turno                                        |
 
 Vitória matemática: só quando um finalista passa da metade do maior total de válidos ainda possível (válidos apurados + eleitorado das seções ainda não apuradas; eleitores de seções não instaladas contam como ausentes) — o ponto em que cruza a meta ajustada na pista. Nenhum resultado das seções restantes muda o vencedor a partir daí; o letreiro informa que o resultado oficial é do TSE.
 
@@ -50,4 +51,4 @@ Vitória matemática: só quando um finalista passa da metade do maior total de 
 
 ## Demonstração
 
-`http://127.0.0.1:3201/telao?demo` (exige `pnpm prototype:data`, que lê o acervo do 1º turno): o replay real do 1º turno convertido em **2º turno sintético**, com selo de demonstração. Nunca usar como resultado.
+`http://127.0.0.1:3201/telao?demo` (exige o replay: `pnpm data:1t` antes do build, ou `pnpm prototype:data` com o acervo do 1º turno): o replay real do 1º turno convertido em **2º turno sintético**, com selo de demonstração. Nunca usar como resultado.

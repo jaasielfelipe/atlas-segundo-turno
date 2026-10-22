@@ -12,6 +12,7 @@
     "typecheck": "tsc --noEmit",
     "build": "pnpm typecheck && pnpm geo && vite build --config apps/web/vite.config.ts && tsup apps/api/src/index.ts --format esm --platform node --target node22 --out-dir dist/api --external better-sqlite3",
     "baseline:round1": "tsx scripts/build-baseline.ts",
+    "data:1t": "tsx scripts/fetch-round1-data.ts",
     "baseline:refresh": "tsx scripts/refresh-baseline.ts",
     "collect:official:live": "tsx scripts/collect-live.ts official 2",
     "collect:simulated:live": "tsx scripts/collect-live.ts simulated 2",
