@@ -146,3 +146,23 @@ Nove requisições manuais, uma por segundo, sem laço e sem coletor ativo (sem 
 
 - Sintoma relatado pelo usuário: “Failed to execute 'json' on 'Response': Unexpected end of JSON input”. Causa: servidor Vite de desenvolvimento (5373) aberto pelo agente ficou órfão depois que a API (3201) foi parada; o proxy respondia 500 sem corpo. O processo órfão foi encerrado.
 - Correção: `readApi()` transforma falta de conexão, HTTP sem JSON e resposta vazia em “Servidor do telão indisponível (…). Verifique o terminal do pnpm start.” e preserva as mensagens de erro do próprio servidor. O telão mantém o último estado. 79 testes; typecheck, build e format:check com código 0.
+
+## 21/10/2026 — dados do 1º turno por release (`pnpm data:1t`)
+
+- Release pública [`dados-1t-v1`](https://github.com/jaasielfelipe/atlas-segundo-turno/releases/tag/dados-1t-v1):
+  - `round1.sqlite.gz`: 18,4 MB; base com `integrity_check` ok e WAL vazio antes da cópia;
+  - `replay-round1.json.gz`: 0,56 MB;
+  - `SHA256SUMS`.
+  O conteúdo é só de dados públicos do TSE; não há caminhos locais nem e-mails.
+- Os hashes de conteúdo ficam em `apps/api/src/services/round1-data.ts`:
+  - base: `119f3024…5db669`;
+  - replay: `863c8c72…6a2c2f`.
+
+  O script recusa download adulterado e nunca sobrescreve um arquivo local diferente. Testes: 80.
+- Ponta a ponta, num clone novo do GitHub (`c81e45b`):
+  - `pnpm install --frozen-lockfile`;
+  - `pnpm data:1t`: instalou os dois arquivos com os hashes acima; na 2ª execução, “já presente” sem baixar de novo;
+  - `pnpm build`: código 0;
+  - base: 6.292 segmentos, integridade ok;
+  - servidor na porta 3299: `/telao` e o replay respondem 200, `/api/telao/bootstrap` responde 503 (sem coleta do 2º turno, como esperado);
+  - `/telao?demo` rodando no navegador, sem erros.
