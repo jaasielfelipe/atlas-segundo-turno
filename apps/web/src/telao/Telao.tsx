@@ -23,13 +23,9 @@ const INCREMENT_MS = 5 * 60_000;
 
 const int = (v: number) => new Intl.NumberFormat('pt-BR').format(Math.round(v));
 const pct = (v: number) =>
-  new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(
+  new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(
     v * 100,
   ) + '%';
-const pp1 = (v: number) =>
-  new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(
-    Math.abs(v),
-  );
 const mi = (v: number) =>
   new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 1 }).format(v / 1e6) + ' mi';
 const time = (iso: string | null) =>
@@ -205,9 +201,8 @@ type Chip = {
 const sideOf = (v: number): Chip['side'] => (v > 0 ? 'f' : v < 0 ? 'l' : 't');
 
 /**
- * Every município–zona bulletin, small and fast. With the 1st-round baseline, the number is the
- * margin change (p.p.) vs the 1st round in that same zone, coloured by direction; without it, the
- * bulletin's own margin in votes, coloured by who got more.
+ * Every município–zona bulletin, small and fast: the bulletin's own margin in votes, coloured by
+ * who got more.
  */
 function ZoneStream({ engine }: { engine: TelaoEngine }) {
   const [chips, setChips] = useState<Chip[]>([]);
@@ -224,22 +219,11 @@ function ZoneStream({ engine }: { engine: TelaoEngine }) {
         recent.length = 0;
         setChips([]);
       }
-      const first = engine.firstRoundSegments;
       for (const a of arrivals) {
         if (!engine.file || !engine.replay) continue;
         const [key, name] = engine.file.municipalities[a.municipality];
-        let value: number, text: string;
-        const now = engine.replay.segment(a.segment);
-        const before = first?.[a.segment];
-        if (before && before.valid > 0 && now.valid > 0) {
-          value =
-            ((now.flavio - now.lula) / now.valid - (before.flavio - before.lula) / before.valid) *
-            100;
-          text = value === 0 ? '±0' : `▲${pp1(value)}`;
-        } else {
-          value = a.addedFlavio - a.addedLula;
-          text = value === 0 ? '±0' : `+${int(Math.abs(value))}`;
-        }
+        const value = a.addedFlavio - a.addedLula;
+        const text = value === 0 ? '±0' : `+${int(Math.abs(value))}`;
         const side = sideOf(value);
         pending.push({
           id: id++,
@@ -283,11 +267,7 @@ function ZoneStream({ engine }: { engine: TelaoEngine }) {
             ) : null,
           )}
         </div>
-        <small>
-          {engine.firstRoundSegments
-            ? 'número: margem vs 1º turno na mesma zona (p.p.)'
-            : 'número: margem do boletim em votos'}
-        </small>
+        <small>número: margem do boletim em votos</small>
       </header>
       <ol>
         {chips.map((c, i) => (

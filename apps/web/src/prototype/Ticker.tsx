@@ -14,7 +14,7 @@ export type TickerItem = {
 };
 
 const pct = (v: number) =>
-  new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(
+  new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(
     v * 100,
   );
 const pp = (v: number) =>
